@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv
+venv/
+
+# Node (future frontend)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Alembic
+alembic/versions/__pycache__/
