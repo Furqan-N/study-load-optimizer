@@ -1,5 +1,5 @@
-from datetime import date, time, datetime
-from pydantic import BaseModel
+from datetime import date, time, datetime, timedelta
+from pydantic import BaseModel, Field
 from uuid import UUID
 
 
@@ -34,3 +34,22 @@ class StudyBlockResponse(StudyBlockBase):
 
     class Config:
         from_attributes = True
+
+
+class PlanGenerateRequest(BaseModel):
+    """Request schema for generating a study plan."""
+    start_date: date | None = Field(
+        default=None,
+        description="Start date for the study plan (defaults to today if not provided)"
+    )
+    end_date: date | None = Field(
+        default=None,
+        description="End date for the study plan (defaults to 7 days from today if not provided)"
+    )
+
+
+class PlanGenerateResponse(BaseModel):
+    """Response schema for study plan generation."""
+    message: str
+    blocks_created: int
+    blocks: list[StudyBlockResponse]

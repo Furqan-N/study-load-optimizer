@@ -90,3 +90,76 @@ alembic upgrade head
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret key for JWT token signing
 - `DEBUG`: Enable debug mode (default: False)
+
+## API Examples
+
+### Authentication
+
+First, register a user and login to get an access token:
+
+```bash
+# Register a new user
+curl -X POST "http://localhost:8000/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123",
+    "full_name": "John Doe"
+  }'
+
+# Login to get access token
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123"
+  }'
+
+# Response: {"access_token": "eyJ...", "token_type": "bearer"}
+```
+
+Save the `access_token` from the login response. Use it in subsequent requests as `Bearer <token>`.
+
+### Course CRUD Operations
+
+Replace `<TOKEN>` with your actual access token and `<COURSE_ID>` with a course UUID.
+
+```bash
+# Get all courses (only current user's courses)
+curl -X GET "http://localhost:8000/api/v1/courses" \
+  -H "Authorization: Bearer <TOKEN>"
+
+# Create a new course
+curl -X POST "http://localhost:8000/api/v1/courses" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "CS135",
+    "name": "Designing Functional Programs",
+    "color": "#3b82f6"
+  }'
+
+# Get a specific course
+curl -X GET "http://localhost:8000/api/v1/courses/<COURSE_ID>" \
+  -H "Authorization: Bearer <TOKEN>"
+
+# Update a course (PUT - full update)
+curl -X PUT "http://localhost:8000/api/v1/courses/<COURSE_ID>" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "CS136",
+    "name": "Elementary Algorithm Design and Data Abstraction",
+    "color": "#ef4444"
+  }'
+
+# Delete a course
+curl -X DELETE "http://localhost:8000/api/v1/courses/<COURSE_ID>" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Notes:**
+- All course operations require authentication
+- Users can only access their own courses (ownership is enforced)
+- `code` and `name` fields are required and cannot be empty
+- `color` is optional

@@ -27,7 +27,7 @@ async def create_course(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Create a new course."""
+    """Create a new course. User can only create courses for themselves."""
     db_course = Course(**course_data.model_dump(), user_id=current_user.id)
     db.add(db_course)
     db.commit()
@@ -41,7 +41,7 @@ async def get_course(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Get a specific course."""
+    """Get a specific course. Only accessible by the course owner."""
     course = db.query(Course).filter(
         Course.id == course_id,
         Course.user_id == current_user.id,
@@ -54,14 +54,14 @@ async def get_course(
     return course
 
 
-@router.patch("/{course_id}", response_model=CourseResponse)
+@router.put("/{course_id}", response_model=CourseResponse)
 async def update_course(
     course_id: UUID,
     course_data: CourseUpdate,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Update a course."""
+    """Update a course. Only the course owner can update it."""
     course = db.query(Course).filter(
         Course.id == course_id,
         Course.user_id == current_user.id,
@@ -85,7 +85,7 @@ async def delete_course(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Delete a course."""
+    """Delete a course. Only the course owner can delete it."""
     course = db.query(Course).filter(
         Course.id == course_id,
         Course.user_id == current_user.id,
