@@ -80,7 +80,7 @@ async def update_assessment(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Update an assessment."""
+    """Update an assessment with automatic status/hours synchronization."""
     assessment = db.query(Assessment).filter(
         Assessment.id == assessment_id,
         Assessment.user_id == current_user.id,
@@ -90,9 +90,43 @@ async def update_assessment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Assessment not found",
         )
+    
     update_data = assessment_data.model_dump(exclude_unset=True)
+    
+    # Store original values
+    original_status = assessment.status
+    original_hours_completed = assessment.hours_completed
+    
+    # Track what's being explicitly updated
+    hours_updated = "hours_completed" in update_data
+    status_updated = "status" in update_data
+    
+    new_hours_completed = update_data.get("hours_completed", original_hours_completed)
+    new_status = update_data.get("status", original_status)
+    
+    # Hours -> Status trigger: If hours_completed is updated and >= expected_hours, set status to 'done'
+    if hours_updated and new_hours_completed >= assessment.expected_hours:
+        # Only auto-set to 'done' if status is not being explicitly changed to something else
+        # This allows reopening (status can be explicitly set to 'in_progress' even if hours >= expected)
+        if not status_updated:
+            update_data["status"] = "done"
+        # If status is being explicitly set, respect that (allows reopening)
+    
+    # Status -> Hours trigger: If status is explicitly set to 'done', set hours_completed = expected_hours
+    if status_updated and new_status == "done":
+        # Determine the current hours value (new if being updated, otherwise original)
+        current_hours = update_data.get("hours_completed", original_hours_completed)
+        # Only update hours if current hours_completed < expected_hours
+        if current_hours < assessment.expected_hours:
+            update_data["hours_completed"] = assessment.expected_hours
+    
+    # Reopening trigger: If status changes from 'done' to 'in_progress', allow it
+    # The logic above already handles this - if status is explicitly set, we respect it
+    
+    # Apply all updates
     for field, value in update_data.items():
         setattr(assessment, field, value)
+    
     db.commit()
     db.refresh(assessment)
     return assessment

@@ -21,6 +21,8 @@ class AssessmentUpdate(BaseModel):
     weight: int | None = None
     due_date: date | None = None
     estimated_hours: int | None = None
+    hours_completed: float | None = None
+    status: str | None = None  # not_started, in_progress, done
 
 
 class AssessmentResponse(AssessmentBase):

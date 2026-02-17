@@ -8,11 +8,10 @@ from sqlalchemy import (
     Date,
     CheckConstraint,
     Index,
-    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.db.base import Base
+from app.db.base_class import Base
 from sqlalchemy.sql import func
 
 
@@ -53,7 +52,7 @@ class Assessment(Base):
     )
     created_at = Column(
         DateTime(timezone=True),
-        server_default=text("now()"),
+        server_default=func.now(),
         nullable=False,
     )
 

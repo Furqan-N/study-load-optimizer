@@ -1,6 +1,12 @@
-from sqlalchemy.orm import declarative_base
+"""
+Database base module for Alembic.
 
-Base = declarative_base()
+This module imports Base from base_class and all models so Alembic can detect them.
+Models should import Base from app.db.base_class, not from here.
+"""
+
+# Import Base from base_class (no circular dependency)
+from app.db.base_class import Base  # noqa
 
 # Import all models here so Alembic can detect them
 from app.models.user import User  # noqa

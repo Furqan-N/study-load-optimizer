@@ -1,12 +1,14 @@
-from datetime import date, time, datetime, timedelta
+from __future__ import annotations
+
+from datetime import date as datetime_date, time as datetime_time, datetime, timedelta
 from pydantic import BaseModel, Field
 from uuid import UUID
 
 
 class StudyBlockBase(BaseModel):
-    date: date
-    start_time: time
-    end_time: time
+    date: datetime_date
+    start_time: datetime_time
+    end_time: datetime_time
     duration_hours: int
     description: str | None = None
     course_id: UUID | None = None
@@ -18,9 +20,9 @@ class StudyBlockCreate(StudyBlockBase):
 
 
 class StudyBlockUpdate(BaseModel):
-    date: date | None = None
-    start_time: time | None = None
-    end_time: time | None = None
+    date: datetime_date | None = None
+    start_time: datetime_time | None = None
+    end_time: datetime_time | None = None
     duration_hours: int | None = None
     description: str | None = None
     course_id: UUID | None = None
@@ -38,11 +40,11 @@ class StudyBlockResponse(StudyBlockBase):
 
 class PlanGenerateRequest(BaseModel):
     """Request schema for generating a study plan."""
-    start_date: date | None = Field(
+    start_date: datetime_date | None = Field(
         default=None,
         description="Start date for the study plan (defaults to today if not provided)"
     )
-    end_date: date | None = Field(
+    end_date: datetime_date | None = Field(
         default=None,
         description="End date for the study plan (defaults to 7 days from today if not provided)"
     )

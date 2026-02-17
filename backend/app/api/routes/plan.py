@@ -2,6 +2,7 @@ from typing import Annotated, List
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import delete, and_
 from uuid import UUID
 from app.db.session import get_db
 from app.models.user import User
@@ -179,6 +180,19 @@ async def generate_plan(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="start_date must be before or equal to end_date",
         )
+    
+    # Delete existing auto-generated blocks for this date range
+    # Only delete blocks with assessment_id (auto-generated), preserve manual blocks
+    delete_stmt = delete(StudyBlock).where(
+        and_(
+            StudyBlock.user_id == current_user.id,
+            StudyBlock.date >= start_date,
+            StudyBlock.date <= end_date,
+            StudyBlock.assessment_id.isnot(None),  # Only delete auto-generated blocks
+        )
+    )
+    db.execute(delete_stmt)
+    db.flush()  # Clear deleted blocks from transaction before adding new ones
     
     # Generate study plan
     new_blocks = generate_study_plan(
