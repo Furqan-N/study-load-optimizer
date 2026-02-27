@@ -1,218 +1,151 @@
-from typing import Annotated, List
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date, datetime, timedelta, timezone
+from typing import Annotated, Dict, List
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import delete, and_
-from uuid import UUID
-from app.db.session import get_db
-from app.models.user import User
-from app.models.study_block import StudyBlock
-from app.schemas.plan import (
-    StudyBlockCreate,
-    StudyBlockUpdate,
-    StudyBlockResponse,
-    PlanGenerateRequest,
-    PlanGenerateResponse,
-)
+
 from app.core.deps import get_current_user
-from app.services.planner import generate_study_plan
-from app.services.study_block import check_for_overlaps
+from app.db.session import get_db
+from app.models.assessment import Assessment
+from app.models.study_session import StudySession
+from app.models.user import User
 
 router = APIRouter(prefix="/plan", tags=["plan"])
 
 
-@router.get("", response_model=List[StudyBlockResponse])
-async def get_study_blocks(
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    """Get all study blocks for the current user."""
-    study_blocks = db.query(StudyBlock).filter(
-        StudyBlock.user_id == current_user.id
-    ).all()
-    return study_blocks
+def generate_smart_schedule(
+    assessments: List[dict],
+    start_date: datetime,
+    max_daily_hours: float = 4.0,
+    max_chunk_hours: float = 1.5,
+) -> List[Dict]:
+    # 1. Break assessments into manageable chunks
+    task_queues: Dict = {}
+    for ass in assessments:
+        # Estimate hours needed (e.g., 0.5 hours per weight percentage point)
+        total_hours = float(ass.get("weight_percentage", 10)) * 0.5
+        chunks = []
 
+        while total_hours > 0:
+            chunk = min(total_hours, max_chunk_hours)
+            chunks.append(
+                {
+                    "assessment_id": ass["id"],
+                    "title": f"Study: {ass['title']}",
+                    "duration_hours": chunk,
+                    "course_id": ass["course_id"],
+                }
+            )
+            total_hours -= chunk
+        task_queues[ass["id"]] = chunks
 
-@router.post("", response_model=StudyBlockResponse, status_code=status.HTTP_201_CREATED)
-async def create_study_block(
-    study_block_data: StudyBlockCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    """Create a new study block."""
-    # Check for overlapping blocks
-    overlapping_block = check_for_overlaps(
-        db=db,
-        user_id=current_user.id,
-        date=study_block_data.date,
-        start_time=study_block_data.start_time,
-        end_time=study_block_data.end_time,
-    )
-    
-    if overlapping_block:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Study block overlaps with an existing block on {overlapping_block.date} "
-                f"from {overlapping_block.start_time} to {overlapping_block.end_time}"
-            ),
+    # 2. Interleave chunks (Round-Robin)
+    interleaved_chunks = []
+    while any(task_queues.values()):
+        for ass_id in list(task_queues.keys()):
+            if task_queues[ass_id]:
+                interleaved_chunks.append(task_queues[ass_id].pop(0))
+
+    # 3. Assign to days with a daily cap
+    schedule = []
+    current_day = start_date
+    hours_today = 0.0
+    for chunk in interleaved_chunks:
+        if hours_today + chunk["duration_hours"] > max_daily_hours:
+            # Move to the next day
+            current_day += timedelta(days=1)
+            hours_today = 0.0
+
+        # Calculate start and end times (starting at 5 PM default for example)
+        session_start = current_day.replace(
+            hour=17,
+            minute=0,
+            second=0,
+            microsecond=0,
+        ) + timedelta(hours=hours_today)
+        session_end = session_start + timedelta(hours=chunk["duration_hours"])
+
+        schedule.append(
+            {
+                "assessment_id": chunk["assessment_id"],
+                "course_id": chunk["course_id"],
+                "title": chunk["title"],
+                "start_time": session_start,
+                "end_time": session_end,
+                "duration_minutes": int(chunk["duration_hours"] * 60),
+            }
         )
-    
-    db_study_block = StudyBlock(
-        **study_block_data.model_dump(),
-        user_id=current_user.id,
-    )
-    db.add(db_study_block)
-    db.commit()
-    db.refresh(db_study_block)
-    return db_study_block
+
+        hours_today += chunk["duration_hours"]
+    return schedule
 
 
-@router.get("/{study_block_id}", response_model=StudyBlockResponse)
-async def get_study_block(
-    study_block_id: UUID,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    """Get a specific study block."""
-    study_block = db.query(StudyBlock).filter(
-        StudyBlock.id == study_block_id,
-        StudyBlock.user_id == current_user.id,
-    ).first()
-    if not study_block:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Study block not found",
-        )
-    return study_block
-
-
-@router.patch("/{study_block_id}", response_model=StudyBlockResponse)
-async def update_study_block(
-    study_block_id: UUID,
-    study_block_data: StudyBlockUpdate,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    """Update a study block."""
-    study_block = db.query(StudyBlock).filter(
-        StudyBlock.id == study_block_id,
-        StudyBlock.user_id == current_user.id,
-    ).first()
-    if not study_block:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Study block not found",
-        )
-    
-    # Get the updated values (use existing values if not provided in update)
-    update_data = study_block_data.model_dump(exclude_unset=True)
-    new_date = update_data.get("date", study_block.date)
-    new_start_time = update_data.get("start_time", study_block.start_time)
-    new_end_time = update_data.get("end_time", study_block.end_time)
-    
-    # Check for overlapping blocks with the new values
-    overlapping_block = check_for_overlaps(
-        db=db,
-        user_id=current_user.id,
-        date=new_date,
-        start_time=new_start_time,
-        end_time=new_end_time,
-        exclude_block_id=study_block_id,  # Exclude the current block being updated
-    )
-    
-    if overlapping_block:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Study block overlaps with an existing block on {overlapping_block.date} "
-                f"from {overlapping_block.start_time} to {overlapping_block.end_time}"
-            ),
-        )
-    
-    # Apply updates
-    for field, value in update_data.items():
-        setattr(study_block, field, value)
-    db.commit()
-    db.refresh(study_block)
-    return study_block
-
-
-@router.delete("/{study_block_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_study_block(
-    study_block_id: UUID,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    """Delete a study block."""
-    study_block = db.query(StudyBlock).filter(
-        StudyBlock.id == study_block_id,
-        StudyBlock.user_id == current_user.id,
-    ).first()
-    if not study_block:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Study block not found",
-        )
-    db.delete(study_block)
-    db.commit()
-    return None
-
-
-@router.post("/generate", response_model=PlanGenerateResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/generate")
 async def generate_plan(
-    request: PlanGenerateRequest,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """
-    Generate a study plan based on user's assessments and availability.
-    
-    Creates StudyBlock objects automatically and saves them to the database.
-    """
-    # Use provided dates or defaults
-    start_date = request.start_date if request.start_date is not None else date.today()
-    end_date = request.end_date if request.end_date is not None else date.today() + timedelta(days=7)
-    
-    # Validate date range
-    if start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="start_date must be before or equal to end_date",
+    today = date.today()
+
+    upcoming_assessments = (
+        db.query(Assessment)
+        .filter(
+            Assessment.user_id == current_user.id,
+            Assessment.is_completed.is_(False),
+            Assessment.due_date >= today,
         )
-    
-    # Delete existing auto-generated blocks for this date range
-    # Only delete blocks with assessment_id (auto-generated), preserve manual blocks
-    delete_stmt = delete(StudyBlock).where(
-        and_(
-            StudyBlock.user_id == current_user.id,
-            StudyBlock.date >= start_date,
-            StudyBlock.date <= end_date,
-            StudyBlock.assessment_id.isnot(None),  # Only delete auto-generated blocks
+        .order_by(Assessment.due_date.asc())
+        .all()
+    )
+
+    if not upcoming_assessments:
+        return {
+            "message": "No upcoming assessments to plan for.",
+            "sessions_created": 0,
+        }
+
+    assessment_dicts = [
+        {
+            "id": assessment.id,
+            "course_id": assessment.course_id,
+            "title": assessment.title,
+            "weight_percentage": assessment.weight_percentage,
+        }
+        for assessment in upcoming_assessments
+    ]
+
+    # Remove previous auto-generated, incomplete sessions before inserting fresh optimized ones.
+    db.query(StudySession).filter(
+        StudySession.user_id == current_user.id,
+        StudySession.is_completed.is_(False),
+        StudySession.title.like("Study: %"),
+    ).delete(synchronize_session=False)
+
+    smart_schedule = generate_smart_schedule(
+        assessments=assessment_dicts,
+        start_date=datetime.now(timezone.utc),
+        max_daily_hours=4.0,
+        max_chunk_hours=1.5,
+    )
+
+    created_sessions = [
+        StudySession(
+            user_id=current_user.id,
+            course_id=item["course_id"],
+            title=item["title"],
+            start_time=item["start_time"],
+            end_time=item["end_time"],
+            duration_minutes=item["duration_minutes"],
+            is_completed=False,
         )
-    )
-    db.execute(delete_stmt)
-    db.flush()  # Clear deleted blocks from transaction before adding new ones
-    
-    # Generate study plan
-    new_blocks = generate_study_plan(
-        db=db,
-        user_id=current_user.id,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    
-    # Save blocks to database
-    if new_blocks:
-        db.add_all(new_blocks)
-        db.commit()
-        
-        # Refresh all blocks to get their IDs and timestamps
-        for block in new_blocks:
-            db.refresh(block)
-    
-    return PlanGenerateResponse(
-        message=f"Successfully generated {len(new_blocks)} study blocks",
-        blocks_created=len(new_blocks),
-        blocks=[StudyBlockResponse.model_validate(block) for block in new_blocks],
-    )
+        for item in smart_schedule
+    ]
+
+    if created_sessions:
+        db.bulk_save_objects(created_sessions)
+    db.commit()
+
+    return {
+        "message": "Schedule optimized!",
+        "sessions_created": len(created_sessions),
+    }

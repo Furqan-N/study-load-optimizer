@@ -1,35 +1,32 @@
-from datetime import datetime, date
-from pydantic import BaseModel
+from datetime import date
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
 
-class AssessmentBase(BaseModel):
-    name: str
-    assessment_type: str
-    weight: int  # Percentage
-    due_date: date
-    estimated_hours: int | None = None
-
-
-class AssessmentCreate(AssessmentBase):
+class AssessmentCreate(BaseModel):
     course_id: UUID
+    assessment_type: str
+    title: str
+    due_date: date
+    weight_percentage: float = Field(..., ge=0, le=100)
+
+    @field_validator("title", "assessment_type")
+    @classmethod
+    def validate_not_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Field cannot be empty")
+        return value.strip()
 
 
-class AssessmentUpdate(BaseModel):
-    name: str | None = None
-    assessment_type: str | None = None
-    weight: int | None = None
-    due_date: date | None = None
-    estimated_hours: int | None = None
-    hours_completed: float | None = None
-    status: str | None = None  # not_started, in_progress, done
-
-
-class AssessmentResponse(AssessmentBase):
+class AssessmentResponse(BaseModel):
     id: UUID
     user_id: UUID
     course_id: UUID
-    created_at: datetime
+    title: str
+    assessment_type: str
+    due_date: date
+    weight_percentage: float
+    is_completed: bool
 
     class Config:
         from_attributes = True

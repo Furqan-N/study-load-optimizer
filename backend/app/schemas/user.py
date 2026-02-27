@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from uuid import UUID
 
 
@@ -15,6 +15,14 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: UUID
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserMeResponse(BaseModel):
+    email: EmailStr
+    full_name: str | None = None
 
     class Config:
         from_attributes = True

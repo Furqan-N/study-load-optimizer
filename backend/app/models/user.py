@@ -18,5 +18,6 @@ class User(Base):
     # Relationships
     courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")
     assessments = relationship("Assessment", back_populates="user", cascade="all, delete-orphan")
+    study_sessions = relationship("StudySession", back_populates="user", cascade="all, delete-orphan")
     availabilities = relationship("Availability", back_populates="user", cascade="all, delete-orphan")
-    study_blocks = relationship("StudyBlock", back_populates="user", cascade="all, delete-orphan")
+

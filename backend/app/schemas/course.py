@@ -1,42 +1,44 @@
-from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
 
-class CourseBase(BaseModel):
-    code: str = Field(..., min_length=1, description="Course code (e.g., CS135)")
-    name: str = Field(..., min_length=1, description="Course name")
-    color: str | None = Field(None, description="Optional color for UI")
+class CourseCreate(BaseModel):
+    course_code: str = Field(..., min_length=1, description="Course code (e.g., MATH 402)")
+    course_name: str = Field(..., min_length=1, description="Course name")
+    credits: float = Field(..., gt=0, description="Course weight in credits")
+    target_grade: str = Field(..., min_length=1, description='Target grade (e.g., "A", "85%")')
 
-
-class CourseCreate(CourseBase):
-    @field_validator("code", "name")
+    @field_validator("course_code", "course_name", "target_grade")
     @classmethod
-    def validate_not_empty(cls, v: str) -> str:
-        if not v or not v.strip():
+    def validate_not_empty(cls, value: str) -> str:
+        if not value.strip():
             raise ValueError("Field cannot be empty")
-        return v.strip()
+        return value.strip()
 
 
 class CourseUpdate(BaseModel):
-    code: str | None = Field(None, min_length=1)
-    name: str | None = Field(None, min_length=1)
-    color: str | None = None
+    course_code: str | None = Field(None, min_length=1, description="Course code (e.g., MATH 402)")
+    course_name: str | None = Field(None, min_length=1, description="Course name")
+    credits: float | None = Field(None, gt=0, description="Course weight in credits")
+    target_grade: str | None = Field(None, min_length=1, description='Target grade (e.g., "A", "85%")')
 
-    @field_validator("code", "name")
+    @field_validator("course_code", "course_name", "target_grade")
     @classmethod
-    def validate_not_empty_if_provided(cls, v: str | None) -> str | None:
-        if v is not None:
-            if not v or not v.strip():
-                raise ValueError("Field cannot be empty")
-            return v.strip()
-        return v
+    def validate_optional_not_empty(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        if not value.strip():
+            raise ValueError("Field cannot be empty")
+        return value.strip()
 
 
-class CourseResponse(CourseBase):
+class CourseResponse(BaseModel):
     id: UUID
     user_id: UUID
-    created_at: datetime
+    course_code: str
+    course_name: str
+    credits: float
+    target_grade: str
 
     class Config:
         from_attributes = True

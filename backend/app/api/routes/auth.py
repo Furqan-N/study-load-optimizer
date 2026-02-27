@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import UserRegister, UserLogin, Token
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, UserMeResponse
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.core.deps import get_current_user
 
@@ -49,13 +49,13 @@ async def login(credentials: UserLogin, db: Annotated[Session, Depends(get_db)])
     
     access_token_expires = timedelta(hours=24)
     access_token = create_access_token(
-        data={"sub": str(user.id)},
+        data={"sub": user.email, "user_id": str(user.id)},
         expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserMeResponse)
 async def get_current_user_info(current_user: Annotated[User, Depends(get_current_user)]):
     """Get current user information."""
     return current_user
