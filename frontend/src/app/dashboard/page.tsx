@@ -20,6 +20,7 @@ type Assessment = {
   due_date: string;
   weight_percentage: number;
   is_completed: boolean;
+  earned_score?: number | null;
 };
 
 type StudySession = {
@@ -173,6 +174,7 @@ export default function DashboardPage() {
   });
   const [quickStudy, setQuickStudy] = useState({ course_id: "", duration_minutes: 60 });
   const [gradeAssessmentId, setGradeAssessmentId] = useState("");
+  const [earnedScore, setEarnedScore] = useState<number | "">("");
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -305,6 +307,16 @@ export default function DashboardPage() {
           courses.reduce((acc, curr) => acc + Number(curr.target_grade || 0), 0) / courses.length,
         )
       : 0;
+  const gradedAssessments = assessments.filter(
+    (a) => a.is_completed && a.earned_score !== null && a.earned_score !== undefined,
+  );
+  let totalEarned = 0;
+  let totalWeight = 0;
+  gradedAssessments.forEach((a) => {
+    totalEarned += a.earned_score! * (a.weight_percentage / 100);
+    totalWeight += a.weight_percentage;
+  });
+  const currentGPA = totalWeight > 0 ? Math.round((totalEarned / totalWeight) * 100) : 0;
 
   const badgeConfig =
     workloadPercentage < 50
@@ -580,12 +592,19 @@ export default function DashboardPage() {
       alert("Please select an assessment.");
       return;
     }
+    if (earnedScore === "") {
+      alert("Please enter a score.");
+      return;
+    }
 
     try {
-      await api.patch(`/assessments/${gradeAssessmentId}/toggle-complete`, {});
+      await api.patch(`/assessments/${gradeAssessmentId}/toggle-complete`, {
+        earned_score: Number(earnedScore),
+      });
       await fetchDashboardData();
       setShowGradeModal(false);
       setGradeAssessmentId("");
+      setEarnedScore("");
     } catch (error: any) {
       console.error("Failed to log grade:", error);
       const detail = error?.response?.data?.detail;
@@ -1022,7 +1041,7 @@ export default function DashboardPage() {
             <div className="relative mt-6 flex flex-1 flex-col items-center justify-center">
               <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{ background: "conic-gradient(#FFD54F 82%, #f1f5f9 82%)" }}>
                 <div className="absolute inset-[8px] flex flex-col items-center justify-center rounded-full bg-white">
-                  <span className="text-4xl font-bold text-slate-900">--%</span>
+                  <span className="text-4xl font-bold text-slate-900">{gradedAssessments.length > 0 ? `${currentGPA}%` : "--%"}</span>
                   <span className="mt-1 text-[8px] font-bold tracking-wider text-slate-400">CURRENT FORECAST</span>
                 </div>
               </div>
@@ -1282,6 +1301,20 @@ export default function DashboardPage() {
                       </>
                     )}
                   </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Score (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={earnedScore}
+                    onChange={(e) =>
+                      setEarnedScore(e.target.value === "" ? "" : Number(e.target.value))
+                    }
+                    required
+                    className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:border-[#3A7BD5] focus:ring-2 focus:ring-[#3A7BD5]/20"
+                  />
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">

@@ -27,6 +27,7 @@ class AssessmentResponse(BaseModel):
     due_date: date
     weight_percentage: float
     is_completed: bool
+    earned_score: float | None = None
 
     class Config:
         from_attributes = True

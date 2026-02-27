@@ -16,6 +16,7 @@ class Assessment(Base):
     due_date = Column(Date, nullable=False)
     weight_percentage = Column(Float, nullable=False)
     is_completed = Column(Boolean, nullable=False, default=False)
+    earned_score = Column(Float, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="assessments")

@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.db.session import get_db
@@ -11,6 +12,10 @@ from app.schemas.assessment import AssessmentCreate, AssessmentResponse
 from app.core.deps import get_current_user
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
+
+
+class GradePayload(BaseModel):
+    earned_score: float | None = None
 
 
 @router.post("/", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED)
@@ -60,6 +65,7 @@ async def get_assessments(
 @router.patch("/{assessment_id}/toggle-complete", response_model=AssessmentResponse)
 async def toggle_assessment_complete(
     assessment_id: UUID,
+    payload: GradePayload | None = None,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
@@ -78,6 +84,9 @@ async def toggle_assessment_complete(
         )
 
     db_assessment.is_completed = not db_assessment.is_completed
+
+    if payload is not None and payload.earned_score is not None:
+        db_assessment.earned_score = payload.earned_score
 
     if db_assessment.is_completed:
         # Clean up unneeded auto-generated study sessions
