@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getRelativeDateLabel } from "@/app/utils/dateHelpers";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 
@@ -10,6 +11,7 @@ type Course = {
   course_name: string;
   credits: number;
   target_grade?: string | number;
+  daily_target_hours?: number | null;
 };
 
 type Assessment = {
@@ -41,6 +43,11 @@ type StudySessionForm = {
   duration_minutes: string;
 };
 
+type CourseStudyTime = {
+  course_id: string;
+  hours: number;
+};
+
 type CourseForm = {
   course_code: string;
   course_name: string;
@@ -70,28 +77,22 @@ function toLocalDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function getDueText(dateString: string) {
-  const today = startOfDay(new Date());
-  const dueDate = startOfDay(new Date(dateString));
-  const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / MS_PER_DAY);
+function parseLocalDate(dateString: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return new Date(dateString.replace(/-/g, "/"));
+  }
+  return new Date(dateString);
+}
 
-  if (diffDays <= 0) return "Today";
-  if (diffDays === 1) return "In 1 day";
-  if (diffDays <= 6) return `In ${diffDays} days`;
-  return "Next week";
+function getDueText(dateString: string) {
+  return getRelativeDateLabel(dateString);
 }
 
 function formatDueDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return parseLocalDate(dateString).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
-}
-
-function getBarHeight(index: number, credits: number) {
-  const creditBased = Math.min(85, Math.max(18, Math.round(credits * 16)));
-  const adjustment = (index % 3) * 6;
-  return `${Math.max(15, creditBased - adjustment)}%`;
 }
 
 function formatSessionTime(dateString: string) {
@@ -129,6 +130,7 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
+  const [courseStudyTime, setCourseStudyTime] = useState<CourseStudyTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
@@ -137,6 +139,7 @@ export default function DashboardPage() {
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [showStudyModal, setShowStudyModal] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [showPacingModal, setShowPacingModal] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [questText, setQuestText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
@@ -156,7 +159,7 @@ export default function DashboardPage() {
   const [courseForm, setCourseForm] = useState<CourseForm>({
     course_code: "",
     course_name: "",
-    credits: "3",
+    credits: "0.5",
   });
   const [assessmentForm, setAssessmentForm] = useState<AssessmentForm>({
     course_id: "",
@@ -175,6 +178,7 @@ export default function DashboardPage() {
   const [quickStudy, setQuickStudy] = useState({ course_id: "", duration_minutes: 60 });
   const [gradeAssessmentId, setGradeAssessmentId] = useState("");
   const [earnedScore, setEarnedScore] = useState<number | "">("");
+  const [pacingTargetInput, setPacingTargetInput] = useState("4.0");
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -187,6 +191,40 @@ export default function DashboardPage() {
       setCourses(coursesResponse.data);
       setAssessments(assessmentsResponse.data);
       setStudySessions(studySessionsResponse.data);
+
+      // Per-course study time (for Course Breakdown bars). Keep dashboard functional even if this endpoint
+      // isn't available yet (e.g., 404) by failing softly.
+      try {
+        const studyTimeResponse = await api.get<CourseStudyTime[]>("/analytics/study-time");
+        setCourseStudyTime(studyTimeResponse.data || []);
+      } catch (error) {
+        console.warn("Failed to load course study time analytics (non-blocking):", error);
+
+        // Fallback: compute this week's per-course hours from study sessions.
+        const now = new Date();
+        const weekStart = startOfDay(new Date(now));
+        weekStart.setDate(now.getDate() - now.getDay());
+        const weekEnd = startOfDay(new Date(weekStart));
+        weekEnd.setDate(weekStart.getDate() + 7);
+
+        const minutesByCourseId = studySessionsResponse.data.reduce<Record<string, number>>(
+          (acc, session) => {
+            const start = new Date(session.start_time);
+            if (start >= weekStart && start < weekEnd) {
+              acc[session.course_id] = (acc[session.course_id] ?? 0) + Number(session.duration_minutes || 0);
+            }
+            return acc;
+          },
+          {},
+        );
+
+        setCourseStudyTime(
+          (coursesResponse.data || []).map((course) => ({
+            course_id: course.id,
+            hours: Number(((minutesByCourseId[course.id] ?? 0) / 60).toFixed(1)),
+          })),
+        );
+      }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -196,6 +234,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    const handleAssessmentsUpdated = () => {
+      void fetchDashboardData();
+    };
+    window.addEventListener("assessments-updated", handleAssessmentsUpdated);
+    return () => {
+      window.removeEventListener("assessments-updated", handleAssessmentsUpdated);
+    };
   }, [fetchDashboardData]);
 
   useEffect(() => {
@@ -226,11 +274,35 @@ export default function DashboardPage() {
     }, {});
   }, [courses]);
 
+  const studyTimeByCourseId = useMemo(() => {
+    return courseStudyTime.reduce<Record<string, number>>((acc, entry) => {
+      const id = String(entry.course_id || "").trim();
+      if (!id) return acc;
+      acc[id] = Number(entry.hours || 0);
+      return acc;
+    }, {});
+  }, [courseStudyTime]);
+
+  const maxCourseHoursRaw = useMemo(() => {
+    return courses.reduce((acc, course) => Math.max(acc, studyTimeByCourseId[course.id] ?? 0), 0);
+  }, [courses, studyTimeByCourseId]);
+
+  const maxCourseHours = maxCourseHoursRaw > 0 ? maxCourseHoursRaw : 1;
+
   const upcomingDeadlines = useMemo(() => {
+    const today = startOfDay(new Date());
+    const inSevenDays = startOfDay(new Date());
+    inSevenDays.setDate(inSevenDays.getDate() + 7);
+
     return assessments
       .filter((assessment) => !assessment.is_completed)
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 3);
+      .filter((assessment) => assessment.earned_score === null || assessment.earned_score === undefined)
+      .filter((assessment) => {
+        const dueDate = startOfDay(parseLocalDate(assessment.due_date));
+        return dueDate >= today && dueDate <= inSevenDays;
+      })
+      .sort((a, b) => parseLocalDate(a.due_date).getTime() - parseLocalDate(b.due_date).getTime())
+      .slice(0, 5);
   }, [assessments]);
 
   const todaysSessions = useMemo(() => {
@@ -242,9 +314,11 @@ export default function DashboardPage() {
   }, [studySessions]);
 
   const calendarDays = useMemo(() => getCurrentWeekDates(weekOffset), [weekOffset]);
-
+  const HOURS_PER_CREDIT_MULTIPLIER = 24 / 18;
   const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
-  const expectedWeeklyMinutes = totalCredits > 0 ? totalCredits * 3 * 60 : 1;
+  const expectedWeeklyMinutes = totalCredits > 0 ? totalCredits * HOURS_PER_CREDIT_MULTIPLIER * 60 : 1;
+  const targetCourse = courses.length > 0 ? courses[0] : null;
+  const dailyTargetHours = Number(targetCourse?.daily_target_hours ?? 4.0);
 
   const now = new Date();
   const weekStart = startOfDay(new Date(now));
@@ -268,6 +342,7 @@ export default function DashboardPage() {
   const weeklyDiffHours = ((thisWeekMinutes - lastWeekMinutes) / 60).toFixed(1);
   const diffColor = Number(weeklyDiffHours) >= 0 ? "text-green-500" : "text-red-500";
   const diffSign = Number(weeklyDiffHours) > 0 ? "+" : "";
+  const diffIcon = Number(weeklyDiffHours) >= 0 ? "trending_up" : "trending_down";
   const workloadPercentage = Math.min(
     100,
     Math.round((thisWeekMinutes / expectedWeeklyMinutes) * 100),
@@ -280,10 +355,32 @@ export default function DashboardPage() {
   const gaugeOffset = gaugeCircumference - (gaugeCircumference * workloadPercentage) / 100;
 
   const actualHours = Number((thisWeekMinutes / 60).toFixed(1));
-  const plannedHours = 24.0;
-  const debtHours = (plannedHours - actualHours).toFixed(1);
-  const isBehind = plannedHours > actualHours;
-  const efficiency = Math.min(100, Math.round((actualHours / plannedHours) * 100));
+  const plannedHours = Number((totalCredits * HOURS_PER_CREDIT_MULTIPLIER).toFixed(1));
+  const safePlannedHours = plannedHours > 0 ? plannedHours : 1;
+  const efficiency = actualHours <= 0 ? 0 : Math.min(100, Math.round((actualHours / safePlannedHours) * 100));
+  const hasLoggedThisWeek = thisWeekSessions.length > 0;
+  const daysElapsedThisWeek = Math.min(
+    7,
+    Math.max(1, Math.floor((startOfDay(new Date()).getTime() - weekStart.getTime()) / MS_PER_DAY) + 1),
+  );
+  const expectedByNow = (safePlannedHours / 7) * daysElapsedThisWeek;
+  const showInitialNeutral = !hasLoggedThisWeek && actualHours === 0;
+  const isBehindDailyTarget = !showInitialNeutral && actualHours < expectedByNow;
+  const debtDisplay = showInitialNeutral
+    ? "0h balance"
+    : isBehindDailyTarget
+      ? `-${(expectedByNow - actualHours).toFixed(1)}h behind`
+      : `+${(actualHours - expectedByNow).toFixed(1)}h ahead`;
+  const debtColorClass = showInitialNeutral
+    ? "text-slate-400"
+    : isBehindDailyTarget
+      ? "text-red-500"
+      : "text-green-500";
+  const debtStatusLabel = showInitialNeutral
+    ? "NEUTRAL"
+    : isBehindDailyTarget
+      ? "ACTION REQUIRED"
+      : "ON TRACK";
 
   const today = new Date();
   const nextWeek = new Date();
@@ -291,7 +388,7 @@ export default function DashboardPage() {
 
   const upcomingDeadlinesCount = assessments.filter((assessment) => {
     if (assessment.is_completed) return false;
-    const dueDate = new Date(assessment.due_date);
+    const dueDate = parseLocalDate(assessment.due_date);
     return dueDate >= today && dueDate <= nextWeek;
   }).length;
 
@@ -301,12 +398,12 @@ export default function DashboardPage() {
     upcomingDeadlinesCount >= 3 ? "Elevated" : upcomingDeadlinesCount >= 1 ? "Moderate" : "Low";
   const burnoutTitle =
     risk === "Elevated" ? "High Workload Upcoming" : risk === "Moderate" ? "Manageable Workload" : "Light Workload";
-  const targetGPA =
-    courses.length > 0
-      ? Math.round(
-          courses.reduce((acc, curr) => acc + Number(curr.target_grade || 0), 0) / courses.length,
-        )
-      : 0;
+  const totalTargetCredits = courses.reduce((acc, curr) => acc + Number(curr.credits || 0), 0);
+  const weightedTargetSum = courses.reduce(
+    (acc, curr) => acc + Number(curr.target_grade || 0) * Number(curr.credits || 0),
+    0,
+  );
+  const targetGPA = totalTargetCredits > 0 ? Math.round(weightedTargetSum / totalTargetCredits) : 0;
   const gradedAssessments = assessments.filter(
     (a) => a.is_completed && a.earned_score !== null && a.earned_score !== undefined,
   );
@@ -316,7 +413,7 @@ export default function DashboardPage() {
     totalEarned += a.earned_score! * (a.weight_percentage / 100);
     totalWeight += a.weight_percentage;
   });
-  const currentGPA = totalWeight > 0 ? Math.round((totalEarned / totalWeight) * 100) : 0;
+  const currentGPA: number | null = totalWeight > 0 ? Math.round((totalEarned / totalWeight) * 100) : null;
 
   const badgeConfig =
     workloadPercentage < 50
@@ -324,6 +421,12 @@ export default function DashboardPage() {
       : workloadPercentage <= 85
         ? { label: "Balanced", className: "bg-green-100 text-green-700", dotClass: "bg-green-500", pace: "sustainable" }
         : { label: "Heavy", className: "bg-red-100 text-red-700", dotClass: "bg-red-500", pace: "heavy" };
+
+  useEffect(() => {
+    if (!showPacingModal) {
+      setPacingTargetInput(dailyTargetHours.toFixed(1));
+    }
+  }, [dailyTargetHours, showPacingModal]);
 
   const closeSessionModal = () => {
     if (submitting) return;
@@ -343,7 +446,7 @@ export default function DashboardPage() {
     setCourseForm({
       course_code: "",
       course_name: "",
-      credits: "3",
+      credits: "0.5",
     });
   };
 
@@ -392,6 +495,45 @@ export default function DashboardPage() {
       console.error("Failed to create study session:", error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSaveTarget = async (value: number) => {
+    if (!targetCourse) {
+      throw new Error("No course available to persist daily target.");
+    }
+    if (Number.isNaN(value) || value < 0 || value > 12) {
+      return;
+    }
+
+    try {
+      await api.patch<Course>(`/courses/${targetCourse.id}`, {
+        daily_target_hours: value,
+      });
+      await fetchDashboardData();
+    } catch (error) {
+      console.error("Failed to update daily target:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmitPacingTarget = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const parsed = Number(pacingTargetInput);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 12) {
+      alert("Please enter a target between 0 and 12 hours.");
+      return;
+    }
+    if (!targetCourse) {
+      alert("Add at least one course before setting a daily target.");
+      return;
+    }
+
+    try {
+      await handleSaveTarget(parsed);
+      setShowPacingModal(false);
+    } catch {
+      alert("Failed to update pacing target. Please try again.");
     }
   };
 
@@ -457,7 +599,7 @@ export default function DashboardPage() {
         parsedCourses.push({
           course_code,
           course_name,
-          credits: 3,
+          credits: 0.5,
           target_grade: "85",
         });
       }
@@ -747,7 +889,7 @@ export default function DashboardPage() {
               <p className="text-sm text-slate-500">Loading deadlines...</p>
             ) : upcomingDeadlines.length === 0 ? (
               <div className="p-4 rounded-xl bg-soft-gray text-sm text-slate-500">
-                No upcoming deadlines. You&apos;re all caught up.
+                You&apos;re all caught up! No upcoming deadlines for the next 7 days.
               </div>
             ) : (
               upcomingDeadlines.map((assessment, index) => {
@@ -757,6 +899,8 @@ export default function DashboardPage() {
                 const barClass =
                   index === 0 ? "bg-red-500" : index === 1 ? "bg-primary" : "bg-blue-400";
                 const dueClass = index === 0 ? "text-red-500" : "text-slate-600";
+                const dueTextClass =
+                  dueText === "TODAY" || dueText === "OVERDUE" ? "text-rose-500" : "text-slate-400";
 
                 return (
                   <div key={assessment.id} className="flex items-center gap-4 p-3 rounded-xl bg-soft-gray group hover:bg-slate-100 transition-colors">
@@ -767,7 +911,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className={`text-xs font-bold ${dueClass}`}>{dueDate}</p>
-                      <p className="text-[10px] text-slate-400 uppercase">{dueText}</p>
+                      <p className={`text-[10px] font-bold uppercase ${dueTextClass}`}>{dueText}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button onClick={() => toggleAssessment(assessment.id)} className="flex-shrink-0 text-slate-300 hover:text-green-500 transition-colors"><span className="material-symbols-outlined">radio_button_unchecked</span></button>
@@ -892,16 +1036,33 @@ export default function DashboardPage() {
               <div className="w-full text-center text-xs text-slate-400">Loading...</div>
             ) : courses.length === 0 ? (
               <div className="w-full text-center text-xs text-slate-400">No courses added yet</div>
+            ) : maxCourseHoursRaw <= 0 ? (
+              <div className="w-full text-center text-xs text-slate-400">Start a timer to see your breakdown.</div>
             ) : (
-              courses.map((course, index) => (
-                <div key={course.id} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className={`w-full rounded-t-lg ${index % 3 === 0 ? "bg-primary" : index % 3 === 1 ? "bg-primary/40" : "bg-primary/20"}`}
-                    style={{ height: getBarHeight(index, course.credits) }}
-                  ></div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase truncate">{course.course_code}</span>
-                </div>
-              ))
+              courses.map((course) => {
+                const code = String(course.course_code || "").trim().toUpperCase();
+                const hours = studyTimeByCourseId[course.id] ?? 0;
+                const heightPct = Math.max(0, Math.min(100, Math.round((hours / maxCourseHours) * 100)));
+                const isStem = /^(CS|MATH|STAT|CO|ECE)\b/i.test(code);
+                const barClass = hours <= 0 ? "bg-slate-100" : isStem ? "bg-blue-500" : "bg-primary/70";
+                const barHeightStyle =
+                  hours <= 0 ? { height: "6%" } : { height: `${heightPct}%` };
+
+                return (
+                  <div key={course.id} className="flex-1 flex flex-col items-center gap-2 min-w-0 self-stretch">
+                    <div className="w-full flex-1 flex items-end">
+                      <div
+                        title={`${hours.toFixed(1)}h`}
+                        className={`w-full rounded-t-lg transition-all duration-500 ${barClass}`}
+                        style={barHeightStyle}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase truncate w-full text-center">
+                      {course.course_code}
+                    </span>
+                  </div>
+                );
+              })
             )}
           </div>
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
@@ -911,7 +1072,11 @@ export default function DashboardPage() {
             </div>
             <div className="h-6 w-[1px] bg-slate-100"></div>
             <div className="text-center">
-              <p className={`text-xs font-bold ${diffColor}`}>{diffSign}{weeklyDiffHours}h</p>
+              <p className={`text-xs font-bold ${diffColor} inline-flex items-center gap-1`}>
+                <span className="material-symbols-outlined !text-[16px]">{diffIcon}</span>
+                {diffSign}
+                {weeklyDiffHours}h
+              </p>
               <p className="text-[10px] text-slate-400 uppercase font-medium">Vs Last Week</p>
             </div>
           </div>
@@ -921,28 +1086,8 @@ export default function DashboardPage() {
       {/* --- PRODUCTIVITY HUB --- */}
       <section className="mt-12 space-y-6">
         {/* Hub Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <h2 className="text-xl font-bold text-slate-900">Productivity Hub</h2>
-          <button
-            onClick={handleOptimize}
-            disabled={isOptimizing}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-              isOptimizing
-                ? "bg-slate-200 text-slate-500"
-                : isOptimized
-                  ? "bg-green-400 text-green-900"
-                  : "bg-[#FFD54F] text-slate-900 hover:bg-[#F3C746]"
-            }`}
-          >
-            {isOptimizing ? (
-              <span className="material-symbols-outlined animate-spin !text-[18px]">sync</span>
-            ) : isOptimized ? (
-              <span className="material-symbols-outlined !text-[18px]">check_circle</span>
-            ) : (
-              <span className="material-symbols-outlined !text-[18px]">bolt</span>
-            )}
-            {isOptimizing ? "Analyzing..." : isOptimized ? "Optimized!" : "Optimize My Schedule"}
-          </button>
         </div>
 
         {/* Bento Grid */}
@@ -958,13 +1103,25 @@ export default function DashboardPage() {
               <select
                 value={timerCourseId}
                 onChange={(event) => setTimerCourseId(event.target.value)}
+                disabled={courses.length === 0}
                 className="mt-4 w-32 cursor-pointer appearance-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-1.5 text-center text-sm font-medium text-slate-700 outline-none"
               >
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.course_code}
+                {courses.length === 0 ? (
+                  <option value="" disabled>
+                    No courses
                   </option>
-                ))}
+                ) : (
+                  <>
+                    <option value="" disabled>
+                      Select course
+                    </option>
+                    {courses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.course_code}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
               <div className="mt-8 flex items-center gap-4">
                 <button onClick={() => setIsRunning(true)} className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFD54F] text-slate-900 shadow-sm transition-colors hover:bg-[#F3C746]">
@@ -988,12 +1145,8 @@ export default function DashboardPage() {
                 <h3 className="mt-1 text-lg font-bold text-slate-900">Weekly Commitment Balance</h3>
               </div>
               <div className="text-right">
-                <span className={`text-xl font-bold ${isBehind ? "text-red-500" : "text-green-500"}`}>
-                  {isBehind
-                    ? `-${debtHours}h behind`
-                    : `+${Math.abs(Number(debtHours)).toFixed(1)}h ahead`}
-                </span>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Action Required</p>
+                <span className={`text-xl font-bold ${debtColorClass}`}>{debtDisplay}</span>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{debtStatusLabel}</p>
               </div>
             </div>
 
@@ -1022,11 +1175,25 @@ export default function DashboardPage() {
             </div>
             <div className="mt-8 flex gap-4">
               <div className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <span className="text-[10px] font-bold tracking-wider text-slate-500">TODAY&apos;S TARGET</span>
-                <p className="mt-1 text-xl font-bold text-slate-900">4.0h</p>
+                <span className="block text-[10px] font-bold tracking-wider text-slate-500">TODAY&apos;S TARGET</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!targetCourse) {
+                      alert("Add at least one course before setting a daily target.");
+                      return;
+                    }
+                    setPacingTargetInput(dailyTargetHours.toFixed(1));
+                    setShowPacingModal(true);
+                  }}
+                  className="mt-1 inline-flex items-center gap-1 rounded-md px-1 -mx-1 text-xl font-bold text-slate-900 transition-colors hover:bg-slate-100/70"
+                >
+                  {dailyTargetHours.toFixed(1)}h
+                  <span className="material-symbols-outlined !text-[14px] text-slate-400">edit</span>
+                </button>
               </div>
               <div className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <span className="text-[10px] font-bold tracking-wider text-slate-500">EFFICIENCY</span>
+                <span className="block text-[10px] font-bold tracking-wider text-slate-500">EFFICIENCY</span>
                 <p className="mt-1 text-xl font-bold text-slate-900">{efficiency}%</p>
               </div>
             </div>
@@ -1039,13 +1206,34 @@ export default function DashboardPage() {
               <span className="material-symbols-outlined text-slate-400">show_chart</span>
             </div>
             <div className="relative mt-6 flex flex-1 flex-col items-center justify-center">
-              <div className="relative flex h-36 w-36 items-center justify-center rounded-full" style={{ background: "conic-gradient(#FFD54F 82%, #f1f5f9 82%)" }}>
-                <div className="absolute inset-[8px] flex flex-col items-center justify-center rounded-full bg-white">
-                  <span className="text-4xl font-bold text-slate-900">{gradedAssessments.length > 0 ? `${currentGPA}%` : "--%"}</span>
+              <div className="relative flex h-36 w-36 items-center justify-center">
+                <svg viewBox="0 0 36 36" className="h-36 w-36 -rotate-90">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="transparent"
+                    className="stroke-slate-100"
+                    strokeWidth="2.5"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="transparent"
+                    className={`${currentGPA === null ? "stroke-slate-100" : "stroke-yellow-400"} transition-all duration-500`}
+                    strokeWidth="2.5"
+                    strokeDasharray="100"
+                    strokeDashoffset={currentGPA === null ? 100 : 100 - currentGPA}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-bold text-slate-900">{currentGPA === null ? "--%" : `${currentGPA}%`}</span>
                   <span className="mt-1 text-[8px] font-bold tracking-wider text-slate-400">CURRENT FORECAST</span>
                 </div>
               </div>
-              <p className="mt-6 text-sm font-semibold text-slate-500">Target: <span className="text-slate-900">{targetGPA}%</span></p>
+              <p className="mt-6 text-sm font-semibold text-slate-500">Target: <span className="text-slate-900">{currentGPA === null ? "--%" : `${targetGPA}%`}</span></p>
             </div>
           </div>
 
@@ -1065,7 +1253,18 @@ export default function DashboardPage() {
                 <h4 className="text-sm font-bold text-slate-900">{burnoutTitle}</h4>
                 <p className="mt-1 text-xs leading-relaxed text-slate-500">System detected {upcomingDeadlinesCount} upcoming deadlines in the next 7 days. Risk level: {risk}.</p>
               </div>
-              <button className="mt-6 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!targetCourse) {
+                    alert("Add at least one course before setting a daily target.");
+                    return;
+                  }
+                  setPacingTargetInput(dailyTargetHours.toFixed(1));
+                  setShowPacingModal(true);
+                }}
+                className="mt-6 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
                 Adjust Pacing
               </button>
             </div>
@@ -1336,6 +1535,61 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : null}
+
+        {showPacingModal ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+              <h3 className="mb-4 text-lg font-bold text-slate-900">Adjust Pacing</h3>
+              <form onSubmit={handleSubmitPacingTarget} className="space-y-4">
+                {!targetCourse ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                    Add at least one course before setting a daily target.
+                  </p>
+                ) : null}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Today&apos;s Target (Hours)
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="12"
+                    step="0.5"
+                    value={Number(pacingTargetInput)}
+                    onChange={(event) => setPacingTargetInput(event.target.value)}
+                    className="w-full accent-[#FFD54F]"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="12"
+                    step="0.5"
+                    value={pacingTargetInput}
+                    onChange={(event) => setPacingTargetInput(event.target.value)}
+                    className="mt-3 h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:border-[#3A7BD5] focus:ring-2 focus:ring-[#3A7BD5]/20"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPacingModal(false)}
+                    className="h-10 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!targetCourse}
+                    className="h-10 rounded-lg bg-[#FFD54F] px-4 text-sm font-semibold text-[#1E1E1E] transition-colors hover:bg-[#C9A227] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Save Target
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {isSessionModalOpen ? (
@@ -1520,7 +1774,7 @@ export default function DashboardPage() {
                 <input
                   id="course_credits"
                   type="number"
-                  min="1"
+                  min="0"
                   step="0.5"
                   value={courseForm.credits}
                   onChange={(event) =>
