@@ -15,6 +15,14 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ALGORITHM", "JWT_ALGORITHM"),
     )
     debug: bool = Field(default=False, alias="DEBUG")
+    google_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"),
+    )
+    google_model: str = Field(
+        default="gemini-2.0-flash",
+        validation_alias=AliasChoices("GOOGLE_MODEL", "GEMINI_MODEL"),
+    )
 
     class Config:
         env_file = ".env"

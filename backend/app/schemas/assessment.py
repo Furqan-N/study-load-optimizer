@@ -31,3 +31,15 @@ class AssessmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AssessmentUpdate(BaseModel):
+    title: str | None = None
+    assessment_type: str | None = None
+    due_date: date | None = None
+    weight_percentage: float | None = Field(default=None, ge=0, le=100)
+    earned_score: float | None = Field(default=None, ge=0, le=100)
+
+
+class AssessmentBulkCreate(BaseModel):
+    items: list[AssessmentCreate]

@@ -12,8 +12,9 @@ class Course(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     course_code = Column(String, nullable=False)  # e.g., "MATH 402"
     course_name = Column(String, nullable=False)  # e.g., "Advanced Calculus"
-    credits = Column(Float, nullable=False)
+    credits = Column(Float, nullable=False, default=0.5)
     target_grade = Column(String, nullable=False)  # e.g., "A", "85%"
+    daily_target_hours = Column(Float, nullable=False, default=4.0)
 
     # Relationships
     user = relationship("User", back_populates="courses")
