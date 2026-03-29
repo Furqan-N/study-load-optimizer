@@ -14,7 +14,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://study-load-optimizer.vercel.app/",
+        "https://study-load-optimizer.vercel.app",
     ], 
 
     allow_credentials=True,
