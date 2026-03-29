@@ -15,6 +15,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://study-load-optimizer.vercel.app",
+        "https://study-load-optimizer-git-main-furqan-ns-projects.vercel.app",
     ], 
 
     allow_credentials=True,
