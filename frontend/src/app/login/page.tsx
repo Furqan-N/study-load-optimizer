@@ -25,12 +25,11 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Send a standard JSON payload matching EXACTLY what FastAPI asked for
       const response = await api.post("/auth/login", {
         email: formData.email,
         password: formData.password
       });
-      
+
       const token = response.data?.access_token;
 
       if (!token) {
@@ -48,17 +47,23 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-10">
+    <main className="min-h-screen bg-[#F8F9FA] px-4 py-10">
       <div className="mx-auto flex min-h-[80vh] w-full max-w-md items-center justify-center">
-        <div className="w-full rounded-xl bg-white p-8 shadow-lg">
-          <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-gray-600">
+        <div className="w-full rounded-xl border border-[#E9ECEF] bg-white p-8 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-8 w-8 rounded-lg bg-[#288028] flex items-center justify-center">
+              <span className="material-symbols-outlined text-white !text-[16px]">query_stats</span>
+            </div>
+            <span className="text-lg font-semibold">StudyLoad</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-black">Welcome back</h1>
+          <p className="mt-1 text-sm text-[#6C757D]">
             Log in to continue to your study dashboard.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-[#6C757D]">
                 Email
               </label>
               <input
@@ -67,12 +72,12 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
+                className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-[#6C757D]">
                 Password
               </label>
               <input
@@ -81,7 +86,7 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
+                className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors"
               />
             </div>
 
@@ -90,15 +95,15 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Logging in..." : "Log in"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-[#6C757D]">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-medium text-gray-900 underline">
+            <Link href="/register" className="font-medium text-black underline">
               Sign up
             </Link>
           </p>

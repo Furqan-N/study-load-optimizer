@@ -15,3 +15,4 @@ from app.models.assessment import Assessment  # noqa
 from app.models.availability import Availability  # noqa
 from app.models.study_block import StudyBlock  # noqa
 from app.models.study_session import StudySession  # noqa
+from app.models.term import Term  # noqa

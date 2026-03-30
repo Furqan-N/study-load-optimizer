@@ -10,6 +10,7 @@ class Course(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    term_id = Column(UUID(as_uuid=True), ForeignKey("terms.id"), nullable=False)
     course_code = Column(String, nullable=False)  # e.g., "MATH 402"
     course_name = Column(String, nullable=False)  # e.g., "Advanced Calculus"
     credits = Column(Float, nullable=False, default=0.5)
@@ -18,5 +19,6 @@ class Course(Base):
 
     # Relationships
     user = relationship("User", back_populates="courses")
+    term = relationship("Term", back_populates="courses")
     assessments = relationship("Assessment", back_populates="course", cascade="all, delete-orphan")
     study_sessions = relationship("StudySession", back_populates="course", cascade="all, delete-orphan")

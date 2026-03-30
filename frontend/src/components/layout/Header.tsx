@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import api from '@/lib/api'; // Using your configured Axios instance
+import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import api from '@/lib/api';
+import { readStoredSelectedTermId } from '@/lib/selectedTermStorage';
 
-// Define the shape of your user data based on your FastAPI backend
 interface User {
   full_name: string;
   email: string;
@@ -21,29 +23,80 @@ interface SearchAssessment {
   assessment_type: string;
 }
 
+const breadcrumbMap: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/dashboard/schedule": "Schedule",
+  "/dashboard/courses": "Courses",
+  "/dashboard/insights": "Insights",
+  "/dashboard/settings": "Settings",
+  "/dashboard/assessments": "Assessments",
+  "/dashboard/calendar": "Calendar",
+};
+
+interface Term {
+  id: string;
+  season: string;
+  year: number;
+}
+
 export default function Header() {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{
     courses: SearchCourse[];
     assessments: SearchAssessment[];
   }>({ courses: [], assessments: [] });
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedTermLabel, setSelectedTermLabel] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Fetch the current user. The Axios interceptor automatically attaches your JWT token!
-        const response = await api.get('/auth/me'); // Update this path if your FastAPI route is different
+        const response = await api.get('/auth/me');
         setUser(response.data);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
       }
     };
-
     fetchUserProfile();
+  }, []);
+
+  const termsRef = useRef<Term[]>([]);
+
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const response = await api.get<Term[]>('/terms/');
+        termsRef.current = response.data;
+        const stored = readStoredSelectedTermId();
+        if (stored) {
+          const term = response.data.find((t) => t.id === stored);
+          if (term) {
+            setSelectedTermLabel(`${term.season} ${term.year}`);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    void fetchTerms();
+
+    const handleTermChange = (e: Event) => {
+      const termId = (e as CustomEvent<string | null>).detail;
+      if (!termId) {
+        setSelectedTermLabel(null);
+        return;
+      }
+      const term = termsRef.current.find((t) => t.id === termId);
+      if (term) {
+        setSelectedTermLabel(`${term.season} ${term.year}`);
+      }
+    };
+    window.addEventListener("term-selected", handleTermChange as EventListener);
+    return () => {
+      window.removeEventListener("term-selected", handleTermChange as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -85,28 +138,41 @@ export default function Header() {
     void runSearch();
   }, [searchQuery]);
 
-  // Use the fetched name, or fallback to 'Student' while it loads
   const displayName = user?.full_name || user?.email || 'Loading...';
   const hasResults = searchResults.courses.length > 0 || searchResults.assessments.length > 0;
 
+  // Build breadcrumb
+  const currentPage = breadcrumbMap[pathname] || (pathname.includes("/courses/") ? "Course Detail" : "Page");
+
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 sticky top-0 z-10">
-      <div className="w-96">
+    <header className="h-14 bg-white border-b border-[#E9ECEF] flex items-center justify-between px-8 shrink-0 sticky top-0 z-10">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm">
+        <Link href="/dashboard" className="text-[#6C757D] hover:text-black transition-colors">Home</Link>
+        <span className="text-[#CED4DA]">›</span>
+        <span className="text-[#6C757D]">{selectedTermLabel ?? "No Term"}</span>
+        <span className="text-[#CED4DA]">›</span>
+        <span className="font-semibold text-black">{currentPage}</span>
+      </nav>
+
+      {/* Right side */}
+      <div className="flex items-center gap-4">
+        {/* Search */}
         <div className="relative group">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6C757D] group-focus-within:text-[#288028] !text-[18px]">search</span>
           <input
-            className="w-full pl-10 pr-4 py-2 bg-soft-gray border-none focus:outline-none rounded-lg text-sm focus:ring-2 focus:ring-primary placeholder:text-slate-400"
-            placeholder="Search courses, sessions or tasks..."
+            className="w-64 pl-9 pr-4 py-1.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#288028]/20 focus:border-[#288028] placeholder:text-[#ADB5BD] transition-colors"
+            placeholder="Search..."
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery.length >= 2 ? (
-            <div className="absolute top-full mt-2 w-full max-w-md rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-50">
+            <div className="absolute top-full mt-2 w-full max-w-md rounded-xl border border-[#E9ECEF] bg-white p-2 shadow-lg z-50">
               {isSearching ? (
-                <p className="px-2 py-2 text-sm text-slate-500">Searching...</p>
+                <p className="px-2 py-2 text-sm text-[#6C757D]">Searching...</p>
               ) : !hasResults ? (
-                <p className="px-2 py-2 text-sm text-slate-500">No results found for &quot;{searchQuery}&quot;</p>
+                <p className="px-2 py-2 text-sm text-[#6C757D]">No results for &quot;{searchQuery}&quot;</p>
               ) : (
                 <div className="space-y-1">
                   {searchResults.courses.map((course) => (
@@ -117,10 +183,10 @@ export default function Header() {
                         setSearchQuery("");
                         setSearchResults({ courses: [], assessments: [] });
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-slate-50 cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[#F8F9FA] cursor-pointer transition-colors"
                     >
-                      <span className="material-symbols-outlined text-slate-500 !text-[18px]">book_5</span>
-                      <span className="text-sm text-slate-700">{course.course_code}</span>
+                      <span className="material-symbols-outlined text-[#6C757D] !text-[18px]">book_5</span>
+                      <span className="text-sm text-black">{course.course_code}</span>
                     </button>
                   ))}
                   {searchResults.assessments.map((assessment) => (
@@ -131,10 +197,10 @@ export default function Header() {
                         setSearchQuery("");
                         setSearchResults({ courses: [], assessments: [] });
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-slate-50 cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-[#F8F9FA] cursor-pointer transition-colors"
                     >
-                      <span className="material-symbols-outlined text-slate-500 !text-[18px]">add_task</span>
-                      <span className="text-sm text-slate-700">{assessment.title}</span>
+                      <span className="material-symbols-outlined text-[#6C757D] !text-[18px]">add_task</span>
+                      <span className="text-sm text-black">{assessment.title}</span>
                     </button>
                   ))}
                 </div>
@@ -142,55 +208,25 @@ export default function Header() {
             </div>
           ) : null}
         </div>
-      </div>
-      
-      <div className="flex items-center gap-6">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <span className="material-symbols-outlined">notifications</span>
-            {hasUnread ? (
-              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-            ) : null}
-          </button>
 
-          {showNotifications ? (
-            <div className="absolute right-0 top-10 z-20 w-80 rounded-xl border border-slate-200 bg-white shadow-lg">
-              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                <p className="text-sm font-semibold text-slate-900">Notifications</p>
-                <button
-                  type="button"
-                  onClick={() => setHasUnread(false)}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Mark all as read
-                </button>
-              </div>
-              <div className="px-4 py-5">
-                <p className="text-sm text-slate-500">No new notifications. You&apos;re all caught up!</p>
-              </div>
-            </div>
-          ) : null}
-        </div>
-        <div className="h-8 w-[1px] bg-slate-200"></div>
-        
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            {/* Inject dynamic name here */}
-            <p className="text-sm font-semibold text-slate-900 leading-none">{displayName}</p>
-            <p className="text-[11px] font-medium text-slate-500 uppercase tracking-tighter mt-1">Student</p>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-primary/20 border-2 border-primary/40 overflow-hidden">
-            {/* Dynamically generate the avatar based on the user's fetched name */}
-            <img 
-              alt="User Profile" 
-              className="h-full w-full object-cover" 
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=ffd54d&color=1E1E1E`} 
+        {/* Notification */}
+        <button
+          type="button"
+          className="relative text-[#6C757D] hover:text-black transition-colors"
+        >
+          <span className="material-symbols-outlined !text-[22px]">notifications</span>
+        </button>
+
+        {/* User */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-full overflow-hidden border border-[#E9ECEF]">
+            <img
+              alt="User Profile"
+              className="h-full w-full object-cover"
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=288028&color=ffffff&size=32`}
             />
           </div>
+          <span className="text-sm font-medium text-black hidden lg:block">{displayName}</span>
         </div>
       </div>
     </header>

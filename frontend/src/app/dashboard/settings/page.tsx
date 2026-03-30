@@ -25,7 +25,6 @@ export default function SettingsPage() {
         setLoading(false);
       }
     };
-
     fetchCurrentUser();
   }, []);
 
@@ -37,20 +36,20 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-8 p-6 md:p-8">
       <section>
-        <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
-        <p className="mt-1 text-sm text-slate-600">Manage your account and preferences.</p>
+        <h1 className="text-2xl font-semibold text-black">Settings</h1>
+        <p className="mt-1 text-sm text-[#6C757D]">Manage your account and preferences.</p>
       </section>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-600">
+        <div className="rounded-xl border border-[#E9ECEF] bg-white p-8 shadow-sm text-sm text-[#6C757D]">
           Loading settings...
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Profile Information</h2>
+          <section className="rounded-xl border border-[#E9ECEF] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-black">Profile Information</h2>
             <div className="mt-5 space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+              <label htmlFor="email" className="block text-sm font-medium text-[#6C757D]">
                 Email
               </label>
               <input
@@ -58,14 +57,14 @@ export default function SettingsPage() {
                 type="email"
                 readOnly
                 value={user?.email ?? ""}
-                className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-700 outline-none"
+                className="h-10 w-full rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] px-3 text-sm text-[#6C757D] outline-none"
               />
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Account Actions</h2>
-            <p className="mt-3 text-sm text-slate-600">
+          <section className="rounded-xl border border-[#E9ECEF] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-black">Account Actions</h2>
+            <p className="mt-3 text-sm text-[#6C757D]">
               Sign out of your account on this device. You can sign in again at any time.
             </p>
 

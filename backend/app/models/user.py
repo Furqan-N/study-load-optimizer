@@ -20,4 +20,5 @@ class User(Base):
     assessments = relationship("Assessment", back_populates="user", cascade="all, delete-orphan")
     study_sessions = relationship("StudySession", back_populates="user", cascade="all, delete-orphan")
     availabilities = relationship("Availability", back_populates="user", cascade="all, delete-orphan")
+    terms = relationship("Term", back_populates="user", cascade="all, delete-orphan")
 

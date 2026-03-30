@@ -3,10 +3,11 @@ from uuid import UUID
 
 
 class CourseCreate(BaseModel):
+    term_id: UUID = Field(..., description="Term this course belongs to")
     course_code: str = Field(..., min_length=1, description="Course code (e.g., MATH 402)")
     course_name: str = Field(..., min_length=1, description="Course name")
     credits: float = Field(0.5, gt=0, description="Course weight in credits")
-    target_grade: str = Field(..., min_length=1, description='Target grade (e.g., "A", "85%")')
+    target_grade: str = Field("85", min_length=1, description='Target grade (e.g., "A", "85%")')
     daily_target_hours: float = Field(
         4.0,
         ge=0,
@@ -23,6 +24,7 @@ class CourseCreate(BaseModel):
 
 
 class CourseUpdate(BaseModel):
+    term_id: UUID | None = Field(None, description="Term this course belongs to")
     course_code: str | None = Field(None, min_length=1, description="Course code (e.g., MATH 402)")
     course_name: str | None = Field(None, min_length=1, description="Course name")
     credits: float | None = Field(None, gt=0, description="Course weight in credits")
@@ -47,6 +49,7 @@ class CourseUpdate(BaseModel):
 class CourseResponse(BaseModel):
     id: UUID
     user_id: UUID
+    term_id: UUID
     course_code: str
     course_name: str
     credits: float

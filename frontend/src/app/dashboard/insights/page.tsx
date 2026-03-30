@@ -42,7 +42,7 @@ type StudySession = {
   is_completed: boolean;
 };
 
-const PIE_COLORS = ["#3A7BD5", "#60A5FA", "#93C5FD", "#BFDBFE", "#DBEAFE"];
+const PIE_COLORS = ["#288028", "#3da63d", "#6abf6a", "#a3d9a3", "#d4eed4"];
 
 export default function InsightsPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -101,47 +101,47 @@ export default function InsightsPage() {
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-8 p-6 md:p-8">
       <section>
-        <h1 className="text-2xl font-semibold text-slate-900">Study Insights</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className="text-2xl font-semibold text-black">Study Insights</h1>
+        <p className="mt-1 text-sm text-[#6C757D]">
           Visualize where your time goes and which courses have the most pending deadlines.
         </p>
       </section>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-600">
+        <div className="rounded-xl border border-[#E9ECEF] bg-white p-8 shadow-sm text-sm text-[#6C757D]">
           Loading insights...
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Total Study Time per Course</h2>
+          <section className="rounded-xl border border-[#E9ECEF] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-black">Total Study Time per Course</h2>
             <div className="mt-4 h-[300px]">
               {timePerCourseData.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                <div className="flex h-full items-center justify-center text-sm text-[#6C757D]">
                   No course data available.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={timePerCourseData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 12 }} />
-                    <YAxis tick={{ fill: "#64748B", fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E9ECEF" />
+                    <XAxis dataKey="name" tick={{ fill: "#6C757D", fontSize: 12 }} />
+                    <YAxis tick={{ fill: "#6C757D", fontSize: 12 }} />
                     <Tooltip
-                      cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
-                      contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }}
+                      cursor={{ fill: "rgba(0, 0, 0, 0.03)" }}
+                      contentStyle={{ borderRadius: 12, borderColor: "#E9ECEF", backgroundColor: "#fff" }}
                     />
-                    <Bar dataKey="minutes" fill="#FFD54F" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="minutes" fill="#288028" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Pending Deadlines by Course</h2>
+          <section className="rounded-xl border border-[#E9ECEF] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-black">Pending Deadlines by Course</h2>
             <div className="mt-4 h-[300px]">
               {assessmentsPerCourseData.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                <div className="flex h-full items-center justify-center text-sm text-[#6C757D]">
                   No assessment data available.
                 </div>
               ) : (
@@ -161,7 +161,7 @@ export default function InsightsPage() {
                         <Cell key={`${entry.name}-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 12, borderColor: "#E2E8F0" }} />
+                    <Tooltip contentStyle={{ borderRadius: 12, borderColor: "#E9ECEF" }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
