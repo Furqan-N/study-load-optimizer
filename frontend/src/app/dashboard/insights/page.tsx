@@ -42,7 +42,7 @@ type StudySession = {
   is_completed: boolean;
 };
 
-const PIE_COLORS = ["#288028", "#3da63d", "#6abf6a", "#a3d9a3", "#d4eed4"];
+const PIE_COLORS = ["#2B5EA7", "#4A7DC4", "#6B9AD8", "#8FB8E8", "#B8D4F2"];
 
 export default function InsightsPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -130,7 +130,7 @@ export default function InsightsPage() {
                       cursor={{ fill: "rgba(0, 0, 0, 0.03)" }}
                       contentStyle={{ borderRadius: 12, borderColor: "#E9ECEF", backgroundColor: "#fff" }}
                     />
-                    <Bar dataKey="minutes" fill="#288028" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="minutes" fill="#2B5EA7" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

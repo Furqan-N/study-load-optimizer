@@ -135,7 +135,7 @@ export default function AssessmentsPage() {
     }
   };
 
-  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors";
+  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-colors";
   const labelClass = "mb-1.5 block text-sm font-medium text-[#6C757D]";
 
   return (
@@ -175,7 +175,7 @@ export default function AssessmentsPage() {
               key={assessment.id}
               className="flex items-center gap-4 border-b border-[#E9ECEF] last:border-b-0 p-4 hover:bg-[#F8F9FA] transition-colors"
             >
-              <div className="h-10 w-1 rounded-full bg-[#288028]" />
+              <div className="h-10 w-1 rounded-full bg-[#2B5EA7]" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-black">{assessment.title}</p>
                 <p className="text-xs text-[#6C757D]">

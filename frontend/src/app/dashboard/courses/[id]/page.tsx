@@ -266,8 +266,8 @@ export default function CourseDetailPage() {
     }
     if (type === "quiz") {
       return {
-        badgeClass: "bg-[#e8f5e8] text-[#288028] border border-[#288028]/30",
-        borderClass: "border-l-4 border-[#288028]/30",
+        badgeClass: "bg-[#e8f0fa] text-[#2B5EA7] border border-[#2B5EA7]/30",
+        borderClass: "border-l-4 border-[#2B5EA7]/30",
       };
     }
     return {
@@ -783,7 +783,7 @@ export default function CourseDetailPage() {
                       onChange={(event) =>
                         setBulkDraft((prev) => ({ ...prev, baseTitle: event.target.value }))
                       }
-                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                     />
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -797,7 +797,7 @@ export default function CourseDetailPage() {
                         onChange={(event) =>
                           setBulkDraft((prev) => ({ ...prev, count: event.target.value }))
                         }
-                        className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                        className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-xs text-[#6C757D]">
@@ -810,7 +810,7 @@ export default function CourseDetailPage() {
                         onChange={(event) =>
                           setBulkDraft((prev) => ({ ...prev, totalWeight: event.target.value }))
                         }
-                        className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                        className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                       />
                     </label>
                   </div>
@@ -822,7 +822,7 @@ export default function CourseDetailPage() {
                       onChange={(event) =>
                         setBulkDraft((prev) => ({ ...prev, startDate: event.target.value }))
                       }
-                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs text-[#6C757D]">
@@ -835,7 +835,7 @@ export default function CourseDetailPage() {
                           frequency: event.target.value as BulkAddDraft["frequency"],
                         }))
                       }
-                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                      className="rounded-xl border border-[#E9ECEF] bg-white px-2 py-1 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                     >
                       <option value="weekly">Weekly</option>
                       <option value="biweekly">Bi-weekly</option>
@@ -854,7 +854,7 @@ export default function CourseDetailPage() {
                         type="checkbox"
                         checked={shiftFollowingDates}
                         onChange={(event) => setShiftFollowingDates(event.target.checked)}
-                        className="h-3.5 w-3.5 accent-[#288028]"
+                        className="h-3.5 w-3.5 accent-[#2B5EA7]"
                       />
                       Shift all following dates
                     </label>
@@ -953,7 +953,7 @@ export default function CourseDetailPage() {
                     <circle
                       cx="60" cy="60" r="52"
                       fill="transparent"
-                      stroke="#288028"
+                      stroke="#2B5EA7"
                       strokeWidth="8"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 52}`}
@@ -982,7 +982,7 @@ export default function CourseDetailPage() {
                       step="0.1"
                       value={targetGradeInput}
                       onChange={(event) => setTargetGradeInput(event.target.value)}
-                      className="w-16 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1 text-center text-xs font-semibold text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                      className="w-16 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1 text-center text-xs font-semibold text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                     />
                     <span>%</span>
                   </div>
@@ -1004,7 +1004,7 @@ export default function CourseDetailPage() {
                         step="1"
                         value={dropLowestQuizCount}
                         onChange={(event) => setDropLowestQuizCount(event.target.value)}
-                        className="w-12 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1 text-center text-xs font-semibold text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                        className="w-12 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1 text-center text-xs font-semibold text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                       />
                     </div>
                   )}
@@ -1025,7 +1025,7 @@ export default function CourseDetailPage() {
                   value={whatIfGrade}
                   onChange={(event) => setWhatIfGrade(event.target.value)}
                   placeholder="e.g. 85"
-                  className="w-full rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] px-4 py-3 text-lg font-semibold text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 placeholder:text-[#CED4DA] transition-colors"
+                  className="w-full rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] px-4 py-3 text-lg font-semibold text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 placeholder:text-[#CED4DA] transition-colors"
                 />
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {[100, 90, 80, 70, 60, 50].map((pct) => (
@@ -1035,7 +1035,7 @@ export default function CourseDetailPage() {
                       onClick={() => setWhatIfGrade(String(pct))}
                       className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                         whatIfGrade === String(pct)
-                          ? "border-[#288028] bg-[#e8f5e8] text-[#288028]"
+                          ? "border-[#2B5EA7] bg-[#e8f0fa] text-[#2B5EA7]"
                           : "border-[#E9ECEF] bg-white text-[#6C757D] hover:bg-[#F8F9FA] hover:text-black"
                       }`}
                     >
@@ -1058,7 +1058,7 @@ export default function CourseDetailPage() {
                       summary.requiredRemainingAverage !== null && summary.requiredRemainingAverage > 100
                         ? "text-red-600"
                         : summary.requiredRemainingAverage !== null && summary.requiredRemainingAverage < 50
-                          ? "text-[#288028]"
+                          ? "text-[#2B5EA7]"
                           : "text-[#6C757D]"
                     }`}
                   >
@@ -1096,12 +1096,12 @@ export default function CourseDetailPage() {
                     </p>
                   </div>
                   {summary.whatIfProjection !== null && (
-                    <div className="rounded-xl border border-[#288028]/30 bg-[#e8f5e8] p-5 transition-all duration-200">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[#288028]/60">Your Projection</p>
-                      <p className="mt-1 text-3xl font-bold text-[#288028]">
+                    <div className="rounded-xl border border-[#2B5EA7]/30 bg-[#e8f0fa] p-5 transition-all duration-200">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[#2B5EA7]/60">Your Projection</p>
+                      <p className="mt-1 text-3xl font-bold text-[#2B5EA7]">
                         {summary.whatIfProjection.toFixed(1)}%
                       </p>
-                      <p className="mt-1 text-xs text-[#288028]/80">
+                      <p className="mt-1 text-xs text-[#2B5EA7]/80">
                         Assuming {whatIfGrade}% on all remaining assessments
                       </p>
                     </div>
@@ -1179,7 +1179,7 @@ export default function CourseDetailPage() {
                         type="text"
                         value={editDraft.title}
                         onChange={(event) => setEditDraft((prev) => ({ ...prev, title: event.target.value }))}
-                        className="flex-1 min-w-[200px] rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-sm font-semibold text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                        className="flex-1 min-w-[200px] rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-sm font-semibold text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                       />
                       <select
                         value={editDraft.assessment_type}
@@ -1194,7 +1194,7 @@ export default function CourseDetailPage() {
                         type="date"
                         value={editDraft.due_date}
                         onChange={(event) => setEditDraft((prev) => ({ ...prev, due_date: event.target.value }))}
-                        className="rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                        className="rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                       />
                       <div className="flex items-center gap-1">
                         <input
@@ -1204,7 +1204,7 @@ export default function CourseDetailPage() {
                           step="0.1"
                           value={editDraft.weight_percentage}
                           onChange={(event) => setEditDraft((prev) => ({ ...prev, weight_percentage: event.target.value }))}
-                          className="w-20 rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#6C757D] outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20"
+                          className="w-20 rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#6C757D] outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20"
                         />
                         <span className="text-xs text-[#6C757D]">%</span>
                       </div>
@@ -1212,7 +1212,7 @@ export default function CourseDetailPage() {
                         type="button"
                         onClick={() => void saveAssessmentEdits(assessment)}
                         disabled={savingAssessmentId === assessment.id}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#288028] text-white transition-all duration-200 hover:bg-[#1f6b1f] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#2B5EA7] text-white transition-all duration-200 hover:bg-[#224a88] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {savingAssessmentId === assessment.id ? (
                           <span className="material-symbols-outlined animate-spin !text-[16px]">sync</span>
@@ -1287,7 +1287,7 @@ export default function CourseDetailPage() {
                             (event.currentTarget as HTMLInputElement).blur();
                           }
                         }}
-                        className={`w-16 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1.5 text-center text-sm font-semibold outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors ${
+                        className={`w-16 rounded-lg border border-[#E9ECEF] bg-[#F8F9FA] px-2 py-1.5 text-center text-sm font-semibold outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-colors ${
                           isDropped ? "line-through text-red-600" : "text-black"
                         }`}
                         placeholder="--"

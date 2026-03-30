@@ -138,7 +138,7 @@ export default function CoursesPage() {
     try { await api.patch(`/courses/${editingCourse.id}`, editingCourse); await fetchCourses(); setEditingCourse(null); } catch (editError) { console.error("Failed to update course:", editError); setError("Could not update course. Please try again."); } finally { setSubmitting(false); }
   };
 
-  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors";
+  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-colors";
   const labelClass = "mb-1.5 block text-sm font-medium text-[#6C757D]";
 
   return (
@@ -196,12 +196,12 @@ export default function CoursesPage() {
               <div className="flex flex-1 flex-col">
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${isArchived ? "bg-[#ADB5BD]" : "bg-[#288028]"}`}></span>
+                    <span className={`h-2 w-2 rounded-full ${isArchived ? "bg-[#ADB5BD]" : "bg-[#2B5EA7]"}`}></span>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">{course.course_code}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="rounded-full bg-[#F8F9FA] border border-[#E9ECEF] px-2.5 py-1 text-xs font-medium text-[#6C757D]">{course.credits} cr</span>
-                    <button onClick={() => setEditingCourse(course)} className="text-[#CED4DA] hover:text-[#288028] transition-colors p-1"><span className="material-symbols-outlined !text-[18px]">edit</span></button>
+                    <button onClick={() => setEditingCourse(course)} className="text-[#CED4DA] hover:text-[#2B5EA7] transition-colors p-1"><span className="material-symbols-outlined !text-[18px]">edit</span></button>
                     <button onClick={() => deleteCourse(course.id)} className="text-[#CED4DA] hover:text-red-500 transition-colors p-1"><span className="material-symbols-outlined !text-[18px]">delete</span></button>
                   </div>
                 </div>

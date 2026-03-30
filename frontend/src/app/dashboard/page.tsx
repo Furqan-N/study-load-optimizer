@@ -495,7 +495,7 @@ export default function DashboardPage() {
     workloadPercentage < 50
       ? { label: "Light", className: "bg-[#F8F9FA] border border-[#E9ECEF] text-[#6C757D]", dotClass: "bg-[#6C757D]", pace: "light" }
       : workloadPercentage <= 85
-        ? { label: "Balanced", className: "bg-[#F8F9FA] border border-[#E9ECEF] text-black", dotClass: "bg-[#288028]", pace: "sustainable" }
+        ? { label: "Balanced", className: "bg-[#F8F9FA] border border-[#E9ECEF] text-black", dotClass: "bg-[#2B5EA7]", pace: "sustainable" }
         : { label: "Heavy", className: "bg-[#F8F9FA] border border-[#E9ECEF] text-[#6C757D]", dotClass: "bg-[#6C757D]", pace: "heavy" };
 
   useEffect(() => {
@@ -1042,7 +1042,7 @@ export default function DashboardPage() {
   };
 
   // Shared modal/input class constants
-  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-all duration-200";
+  const inputClass = "h-10 w-full rounded-xl border border-[#E9ECEF] bg-white px-3 text-sm text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-all duration-200";
   const labelClass = "mb-1.5 block text-sm font-medium text-[#6C757D]";
   const cancelBtnClass = "h-10 rounded-xl border border-[#E9ECEF] px-4 text-sm font-medium text-[#6C757D] transition-all duration-200 hover:bg-[#F8F9FA] disabled:opacity-60";
   const submitBtnClass = "h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white transition-all duration-200 hover:bg-gray-800 disabled:opacity-60";
@@ -1058,7 +1058,7 @@ export default function DashboardPage() {
           <div className="relative flex items-center justify-center">
             <svg className="w-32 h-32 transform -rotate-90">
               <circle className="text-[#E9ECEF]" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="8"></circle>
-              <circle className="text-[#288028]" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray="364.42" strokeDashoffset={gaugeOffset} strokeLinecap="round" strokeWidth="8"></circle>
+              <circle className="text-[#2B5EA7]" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray="364.42" strokeDashoffset={gaugeOffset} strokeLinecap="round" strokeWidth="8"></circle>
             </svg>
             <div className="absolute flex flex-col items-center justify-center text-center">
               <span className="text-2xl font-bold text-black">{workloadPercentage}%</span>
@@ -1094,7 +1094,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="bg-white rounded-xl p-6 border border-[#E9ECEF] shadow-sm transition-all duration-200 hover:shadow-md">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#6C757D]">Term Average</span>
-          <p className="mt-2 text-4xl font-bold text-[#288028]">{currentGPA === null ? "--%" : `${currentGPA}%`}</p>
+          <p className="mt-2 text-4xl font-bold text-[#2B5EA7]">{currentGPA === null ? "--%" : `${currentGPA}%`}</p>
           <p className="mt-1 text-xs text-[#6C757D]">Target: {targetGPA > 0 ? `${targetGPA}%` : "--"}</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-[#E9ECEF] shadow-sm transition-all duration-200 hover:shadow-md">
@@ -1105,7 +1105,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl p-6 border border-[#E9ECEF] shadow-sm transition-all duration-200 hover:shadow-md">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#6C757D]">GPA Projection</span>
           <div className="relative mt-2 flex items-center gap-3">
-            <p className="text-4xl font-bold text-[#288028]">{currentGPA === null ? "--%" : `${currentGPA}%`}</p>
+            <p className="text-4xl font-bold text-[#2B5EA7]">{currentGPA === null ? "--%" : `${currentGPA}%`}</p>
           </div>
           <p className="mt-1 text-xs text-[#6C757D]">Based on {gradedAssessments.length} graded items</p>
         </div>
@@ -1115,7 +1115,7 @@ export default function DashboardPage() {
       <div className="rounded-xl border border-[#E9ECEF] bg-white shadow-sm p-6 transition-all duration-200 hover:shadow-md">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#288028]">calendar_month</span>
+            <span className="material-symbols-outlined text-[#2B5EA7]">calendar_month</span>
             <h3 className="text-lg font-semibold text-black">
               {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </h3>
@@ -1164,13 +1164,13 @@ export default function DashboardPage() {
               <div
                 key={dayKey}
                 className={`flex flex-col items-center justify-center py-3 rounded-xl transition-colors ${
-                  isToday ? "bg-[#288028] text-white" : isPast ? "text-[#CED4DA]" : "text-black"
+                  isToday ? "bg-[#2B5EA7] text-white" : isPast ? "text-[#CED4DA]" : "text-black"
                 }`}
               >
                 <span className={`text-lg font-semibold ${isToday ? "text-white" : ""}`}>{day.getDate()}</span>
                 <div className="flex items-center gap-1 mt-1 h-2">
                   {hasDeliverable ? (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-white" : "bg-[#288028]"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-white" : "bg-[#2B5EA7]"}`}></span>
                   ) : null}
                   {hasSession ? (
                     <span className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-white/60" : "bg-[#ADB5BD]"}`}></span>
@@ -1181,7 +1181,7 @@ export default function DashboardPage() {
           })}
         </div>
         <div className="mt-4 flex items-center gap-6 text-xs text-[#6C757D]">
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#288028]"></span> Deliverable due</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#2B5EA7]"></span> Deliverable due</div>
           <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#ADB5BD]"></span> Study session</div>
         </div>
       </div>
@@ -1217,7 +1217,7 @@ export default function DashboardPage() {
 
                 return (
                   <div key={assessment.id} className="flex items-center gap-4 p-3 border-b border-[#E9ECEF] group hover:bg-[#F8F9FA] transition-all duration-200">
-                    <div className="h-10 w-1 bg-[#288028] rounded-full"></div>
+                    <div className="h-10 w-1 bg-[#2B5EA7] rounded-full"></div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-black truncate">{assessment.title}</p>
                       <p className="text-xs text-[#6C757D]">{course?.course_name || course?.course_code || "Unknown Course"}</p>
@@ -1286,7 +1286,7 @@ export default function DashboardPage() {
                 >
                   {day.getDate()}
                   {hasSession ? (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#288028] rounded-full"></span>
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#2B5EA7] rounded-full"></span>
                   ) : null}
                 </span>
               );
@@ -1304,7 +1304,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={session.id}
-                    className="p-3 bg-[#F8F9FA] border-l-2 border-[#288028] rounded-r-xl mb-2 flex items-start justify-between gap-3"
+                    className="p-3 bg-[#F8F9FA] border-l-2 border-[#2B5EA7] rounded-r-xl mb-2 flex items-start justify-between gap-3"
                   >
                     <div className="min-w-0">
                       <p className="text-[10px] font-bold text-[#6C757D] uppercase">
@@ -1351,7 +1351,7 @@ export default function DashboardPage() {
               filteredCourses.map((course) => {
                 const hours = studyTimeByCourseId[course.id] ?? 0;
                 const heightPct = Math.max(0, Math.min(100, Math.round((hours / maxCourseHours) * 100)));
-                const barClass = hours <= 0 ? "bg-[#E9ECEF]" : "bg-[#288028]";
+                const barClass = hours <= 0 ? "bg-[#E9ECEF]" : "bg-[#2B5EA7]";
                 const barHeightStyle =
                   hours <= 0 ? { height: "6%" } : { height: `${heightPct}%` };
 
@@ -1422,7 +1422,7 @@ export default function DashboardPage() {
                     if (Number.isNaN(raw)) return;
                     setPomodoroDurationMinutes(Math.min(180, Math.max(1, raw)));
                   }}
-                  className="w-16 rounded-lg border border-[#E9ECEF] bg-white px-2 py-1.5 text-center text-sm font-semibold text-black outline-none transition-colors focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 disabled:cursor-not-allowed disabled:bg-[#F8F9FA] disabled:text-[#ADB5BD]"
+                  className="w-16 rounded-lg border border-[#E9ECEF] bg-white px-2 py-1.5 text-center text-sm font-semibold text-black outline-none transition-colors focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 disabled:cursor-not-allowed disabled:bg-[#F8F9FA] disabled:text-[#ADB5BD]"
                 />
               </div>
               <select
@@ -1493,7 +1493,7 @@ export default function DashboardPage() {
                   <span>{actualHours} HOURS</span>
                 </div>
                 <div className="h-3 w-full rounded-xl bg-[#E9ECEF]">
-                  <div className="h-3 rounded-xl bg-[#288028]" style={{ width: `${efficiency}%` }}></div>
+                  <div className="h-3 rounded-xl bg-[#2B5EA7]" style={{ width: `${efficiency}%` }}></div>
                 </div>
               </div>
             </div>
@@ -1554,14 +1554,14 @@ export default function DashboardPage() {
                   }}
                   className={`term-card relative p-6 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
                     dragOverTermId === term.id && dragTermId !== term.id
-                      ? "ring-2 ring-green-400 scale-105"
+                      ? "ring-2 ring-blue-400 scale-105"
                       : dragTermId === term.id
                         ? "opacity-50 scale-95"
                         : "hover:scale-105"
                   } ${
                     isSelected
-                      ? "bg-green-50 border-2 border-green-600"
-                      : "bg-white border border-slate-200 hover:border-green-600"
+                      ? "bg-blue-50 border-2 border-blue-600"
+                      : "bg-white border border-slate-200 hover:border-blue-600"
                   }`}
                 >
                   <div className="term-card-actions absolute top-2 right-2 flex gap-0.5 opacity-0 transition-opacity">
@@ -1584,16 +1584,16 @@ export default function DashboardPage() {
                   </div>
                   <span
                     className={`material-symbols-outlined !text-[28px] mb-2 ${
-                      isSelected ? "text-green-700" : "text-[#ADB5BD]"
+                      isSelected ? "text-blue-700" : "text-[#ADB5BD]"
                     }`}
                   >
                     {getSeasonIcon(term.season)}
                   </span>
-                  <p className={`text-sm font-bold ${isSelected ? "text-green-800" : "text-black"}`}>
+                  <p className={`text-sm font-bold ${isSelected ? "text-blue-800" : "text-black"}`}>
                     {term.season} &apos;{String(term.year).slice(2)}
                   </p>
                   <p className={`text-[10px] uppercase font-semibold mt-1 ${
-                    isSelected ? "text-green-600" : "text-[#6C757D]"
+                    isSelected ? "text-blue-600" : "text-[#6C757D]"
                   }`}>
                     {term.course_count} course{term.course_count !== 1 ? "s" : ""}
                   </p>
@@ -1608,10 +1608,10 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setIsTermModalOpen(true)}
-                className="p-6 rounded-2xl border-2 border-dashed border-[#E9ECEF] bg-[#F8F9FA] flex flex-col items-center justify-center text-center transition-transform hover:scale-105 hover:border-green-600 hover:bg-green-50 cursor-pointer group"
+                className="p-6 rounded-2xl border-2 border-dashed border-[#E9ECEF] bg-[#F8F9FA] flex flex-col items-center justify-center text-center transition-transform hover:scale-105 hover:border-blue-600 hover:bg-blue-50 cursor-pointer group"
               >
-                <span className="material-symbols-outlined text-[#CED4DA] !text-[32px] group-hover:text-green-600 transition-colors">add</span>
-                <p className="text-xs font-semibold text-[#ADB5BD] mt-1 group-hover:text-green-600 transition-colors">Add Term</p>
+                <span className="material-symbols-outlined text-[#CED4DA] !text-[32px] group-hover:text-blue-600 transition-colors">add</span>
+                <p className="text-xs font-semibold text-[#ADB5BD] mt-1 group-hover:text-blue-600 transition-colors">Add Term</p>
               </button>
             </div>
           </div>
@@ -1763,7 +1763,7 @@ export default function DashboardPage() {
                 ) : null}
                 <div>
                   <label className={labelClass}>Today&apos;s Target (Hours)</label>
-                  <input type="range" min="0" max="12" step="0.5" value={Number(pacingTargetInput)} onChange={(event) => setPacingTargetInput(event.target.value)} className="w-full accent-[#288028]" />
+                  <input type="range" min="0" max="12" step="0.5" value={Number(pacingTargetInput)} onChange={(event) => setPacingTargetInput(event.target.value)} className="w-full accent-[#2B5EA7]" />
                   <input type="number" min="0" max="12" step="0.5" value={pacingTargetInput} onChange={(event) => setPacingTargetInput(event.target.value)} className={`mt-3 ${inputClass}`} />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-2">
@@ -1924,7 +1924,7 @@ export default function DashboardPage() {
             </p>
             <form onSubmit={handleImportQuest} className="space-y-4">
               <div>
-                <textarea value={questText} onChange={(event) => setQuestText(event.target.value)} placeholder="Paste your Quest List View text here..." className="min-h-[220px] w-full rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-sm text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 placeholder:text-[#ADB5BD] transition-all duration-200" required />
+                <textarea value={questText} onChange={(event) => setQuestText(event.target.value)} placeholder="Paste your Quest List View text here..." className="min-h-[220px] w-full rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-sm text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 placeholder:text-[#ADB5BD] transition-all duration-200" required />
               </div>
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button type="button" onClick={closeQuestModal} disabled={isImporting} className={cancelBtnClass}>Cancel</button>
@@ -2056,7 +2056,7 @@ export default function DashboardPage() {
                                   return next;
                                 });
                               }}
-                              className="h-4 w-4 rounded border-[#E9ECEF] text-[#288028] focus:ring-[#288028]"
+                              className="h-4 w-4 rounded border-[#E9ECEF] text-[#2B5EA7] focus:ring-[#2B5EA7]"
                             />
                             <div className="flex-1 min-w-0">
                               <span className="text-sm font-semibold text-black">{course.course_code}</span>
@@ -2074,9 +2074,9 @@ export default function DashboardPage() {
                 {editTermNewCourses.length > 0 && (
                   <div className="mt-3 space-y-3">
                     {editTermNewCourses.map((nc, idx) => (
-                      <div key={idx} className="rounded-xl border border-dashed border-[#288028] bg-green-50/50 p-3 space-y-2">
+                      <div key={idx} className="rounded-xl border border-dashed border-[#2B5EA7] bg-blue-50/50 p-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#288028]">New Course</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#2B5EA7]">New Course</span>
                           <button
                             type="button"
                             onClick={() => setEditTermNewCourses((prev) => prev.filter((_, i) => i !== idx))}
@@ -2134,7 +2134,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setEditTermNewCourses((prev) => [...prev, { course_code: "", course_name: "", credits: "3", target_grade: "A" }])}
-                  className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#ADB5BD] py-2 text-sm font-medium text-[#6C757D] transition-colors hover:border-[#288028] hover:text-[#288028]"
+                  className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#ADB5BD] py-2 text-sm font-medium text-[#6C757D] transition-colors hover:border-[#2B5EA7] hover:text-[#2B5EA7]"
                 >
                   <span className="material-symbols-outlined !text-[18px]">add</span>
                   Add Course

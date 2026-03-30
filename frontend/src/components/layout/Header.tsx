@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { readStoredSelectedTermId } from '@/lib/selectedTermStorage';
@@ -21,6 +21,14 @@ interface SearchAssessment {
   id: string;
   title: string;
   assessment_type: string;
+  due_date: string;
+  course_id: string;
+}
+
+interface Course {
+  id: string;
+  course_code: string;
+  course_name: string;
 }
 
 const breadcrumbMap: Record<string, string> = {
@@ -39,8 +47,15 @@ interface Term {
   year: number;
 }
 
+function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{
@@ -49,6 +64,12 @@ export default function Header() {
   }>({ courses: [], assessments: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [selectedTermLabel, setSelectedTermLabel] = useState<string | null>(null);
+
+  // Notification state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [allAssessments, setAllAssessments] = useState<SearchAssessment[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -60,6 +81,42 @@ export default function Header() {
       }
     };
     fetchUserProfile();
+  }, []);
+
+  // Fetch assessments and courses for notifications
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [assessRes, coursesRes] = await Promise.all([
+          api.get<SearchAssessment[]>('/assessments/'),
+          api.get<Course[]>('/courses/'),
+        ]);
+        setAllAssessments(assessRes.data);
+        setAllCourses(coursesRes.data);
+      } catch {
+        // ignore
+      }
+    };
+    void fetchData();
+
+    const handleUpdate = () => void fetchData();
+    window.addEventListener("assessments-updated", handleUpdate);
+    window.addEventListener("courses-updated", handleUpdate);
+    return () => {
+      window.removeEventListener("assessments-updated", handleUpdate);
+      window.removeEventListener("courses-updated", handleUpdate);
+    };
+  }, []);
+
+  // Close notification dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const termsRef = useRef<Term[]>([]);
@@ -144,14 +201,46 @@ export default function Header() {
   // Build breadcrumb
   const currentPage = breadcrumbMap[pathname] || (pathname.includes("/courses/") ? "Course Detail" : "Page");
 
+  // Upcoming notifications: assessments due within 7 days
+  const courseMap = useMemo(() => {
+    const map: Record<string, Course> = {};
+    allCourses.forEach((c) => { map[c.id] = c; });
+    return map;
+  }, [allCourses]);
+
+  const upcomingNotifications = useMemo(() => {
+    const today = startOfDay(new Date());
+    const inSevenDays = new Date(today);
+    inSevenDays.setDate(inSevenDays.getDate() + 7);
+
+    return allAssessments
+      .filter((a) => {
+        const due = new Date(a.due_date);
+        return due >= today && due <= inSevenDays;
+      })
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  }, [allAssessments]);
+
+  const formatNotifDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = startOfDay(new Date());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dueDay = startOfDay(date);
+
+    if (dueDay.getTime() === today.getTime()) return "Today";
+    if (dueDay.getTime() === tomorrow.getTime()) return "Tomorrow";
+    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
   return (
     <header className="h-14 bg-white border-b border-[#E9ECEF] flex items-center justify-between px-8 shrink-0 sticky top-0 z-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href="/dashboard" className="text-[#6C757D] hover:text-black transition-colors">Home</Link>
-        <span className="text-[#CED4DA]">›</span>
+        <span className="text-[#CED4DA]">&rsaquo;</span>
         <span className="text-[#6C757D]">{selectedTermLabel ?? "No Term"}</span>
-        <span className="text-[#CED4DA]">›</span>
+        <span className="text-[#CED4DA]">&rsaquo;</span>
         <span className="font-semibold text-black">{currentPage}</span>
       </nav>
 
@@ -159,9 +248,9 @@ export default function Header() {
       <div className="flex items-center gap-4">
         {/* Search */}
         <div className="relative group">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6C757D] group-focus-within:text-[#288028] !text-[18px]">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6C757D] group-focus-within:text-[#2B5EA7] !text-[18px]">search</span>
           <input
-            className="w-64 pl-9 pr-4 py-1.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#288028]/20 focus:border-[#288028] placeholder:text-[#ADB5BD] transition-colors"
+            className="w-64 pl-9 pr-4 py-1.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#2B5EA7]/20 focus:border-[#2B5EA7] placeholder:text-[#ADB5BD] transition-colors"
             placeholder="Search..."
             type="text"
             value={searchQuery}
@@ -210,24 +299,83 @@ export default function Header() {
         </div>
 
         {/* Notification */}
+        <div className="relative" ref={notifRef}>
+          <button
+            type="button"
+            onClick={() => setShowNotifications((prev) => !prev)}
+            className="relative text-[#6C757D] hover:text-black transition-colors"
+          >
+            <span className="material-symbols-outlined !text-[22px]">notifications</span>
+            {upcomingNotifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#2B5EA7] text-[9px] font-bold text-white">
+                {upcomingNotifications.length > 9 ? "9+" : upcomingNotifications.length}
+              </span>
+            )}
+          </button>
+
+          {showNotifications && (
+            <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-[#E9ECEF] bg-white shadow-lg z-50">
+              <div className="px-4 py-3 border-b border-[#E9ECEF]">
+                <p className="text-sm font-semibold text-black">Upcoming Deadlines</p>
+                <p className="text-[10px] text-[#6C757D]">Next 7 days</p>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {upcomingNotifications.length === 0 ? (
+                  <div className="px-4 py-6 text-center">
+                    <span className="material-symbols-outlined text-[#CED4DA] !text-[32px]">check_circle</span>
+                    <p className="mt-2 text-sm text-[#6C757D]">You&apos;re all caught up!</p>
+                  </div>
+                ) : (
+                  upcomingNotifications.map((assessment) => {
+                    const course = courseMap[assessment.course_id];
+                    return (
+                      <div
+                        key={assessment.id}
+                        className="flex items-start gap-3 px-4 py-3 border-b border-[#E9ECEF] last:border-0 hover:bg-[#F8F9FA] transition-colors"
+                      >
+                        <div className="mt-0.5 h-2 w-2 rounded-full bg-[#2B5EA7] shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-black truncate">{assessment.title}</p>
+                          <p className="text-[11px] text-[#6C757D]">{course?.course_code || "Unknown"}</p>
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#6C757D] shrink-0">
+                          {formatNotifDate(assessment.due_date)}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {upcomingNotifications.length > 0 && (
+                <div className="px-4 py-2 border-t border-[#E9ECEF]">
+                  <Link
+                    href="/dashboard/schedule"
+                    onClick={() => setShowNotifications(false)}
+                    className="text-xs font-semibold text-[#2B5EA7] hover:underline"
+                  >
+                    View all deadlines
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* User — click to go to settings */}
         <button
           type="button"
-          className="relative text-[#6C757D] hover:text-black transition-colors"
+          onClick={() => router.push("/dashboard/settings")}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <span className="material-symbols-outlined !text-[22px]">notifications</span>
-        </button>
-
-        {/* User */}
-        <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-full overflow-hidden border border-[#E9ECEF]">
             <img
               alt="User Profile"
               className="h-full w-full object-cover"
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=288028&color=ffffff&size=32`}
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2B5EA7&color=ffffff&size=32`}
             />
           </div>
           <span className="text-sm font-medium text-black hidden lg:block">{displayName}</span>
-        </div>
+        </button>
       </div>
     </header>
   );

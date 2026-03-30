@@ -120,7 +120,7 @@ function buildDayEvents(
         ? "bg-rose-50 text-rose-700 border-rose-400"
         : titleLower.includes("midterm") || typeLower.includes("midterm")
           ? "bg-amber-50 text-amber-700 border-amber-400"
-          : "bg-[#e8f5e8] text-[#288028] border-[#288028]";
+          : "bg-[#e8f0fa] text-[#2B5EA7] border-[#2B5EA7]";
     events.push({ id: `a-${assessment.id}`, timestamp: Number.isNaN(when.getTime()) ? 0 : when.getTime(), label, pillClass });
   }
 
@@ -283,7 +283,7 @@ export default function CalendarPage() {
                 const isToday = key === todayKey;
                 const inMonth = day.getMonth() === viewMonth && day.getFullYear() === viewYear;
                 return (
-                  <span key={key} className={`py-1 ${!inMonth ? "text-[#DEE2E6]" : ""} ${isToday ? "rounded-lg bg-[#288028] text-white font-bold" : ""}`}>
+                  <span key={key} className={`py-1 ${!inMonth ? "text-[#DEE2E6]" : ""} ${isToday ? "rounded-lg bg-[#2B5EA7] text-white font-bold" : ""}`}>
                     {day.getDate()}
                   </span>
                 );
@@ -294,7 +294,7 @@ export default function CalendarPage() {
           <section className="rounded-xl border border-[#E9ECEF] bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-black">Event Types</h3>
             <div className="mt-4 space-y-3 text-sm text-[#6C757D]">
-              <div className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-[#288028]" /><span>Quizzes</span></div>
+              <div className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-[#2B5EA7]" /><span>Quizzes</span></div>
               <div className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-amber-500" /><span>Midterms</span></div>
               <div className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-rose-500" /><span>Exams</span></div>
               <div className="flex items-center gap-3"><span className="h-3 w-3 rounded-full bg-[#ADB5BD]" /><span>Study Sessions</span></div>
@@ -340,7 +340,7 @@ export default function CalendarPage() {
                     <div key={dayKey} className={`calendar-grid-cell border-b border-[#E9ECEF] p-3 ${cellBorderRight} ${isCurrentMonth ? "bg-white" : "bg-[#F8F9FA]"}`}>
                       <div className="flex items-start justify-between">
                         {isToday ? (
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#288028] text-[11px] font-bold text-white">{day.getDate()}</span>
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2B5EA7] text-[11px] font-bold text-white">{day.getDate()}</span>
                         ) : (
                           <span className={`text-xs font-semibold ${isCurrentMonth ? "text-[#6C757D]" : "text-[#DEE2E6]"}`}>{day.getDate()}</span>
                         )}
@@ -369,7 +369,7 @@ export default function CalendarPage() {
                   return (
                     <div key={key} className="border-l border-[#E9ECEF] py-3 text-center">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-[#ADB5BD]">{dayAbbr}</div>
-                      <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${isToday ? "bg-[#288028] text-white" : "text-[#6C757D]"}`}>
+                      <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${isToday ? "bg-[#2B5EA7] text-white" : "text-[#6C757D]"}`}>
                         {day.getDate()}
                       </div>
                     </div>

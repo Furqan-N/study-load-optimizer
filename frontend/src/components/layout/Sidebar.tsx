@@ -136,10 +136,10 @@ export default function Sidebar() {
                 className={`
                   group relative flex justify-start items-center gap-4 h-10 rounded-lg overflow-hidden
                   transition-[background-color,color] duration-150 ease-out
-                  text-slate-500 hover:bg-[#F0FDF4] hover:text-slate-800
+                  text-slate-500 hover:bg-[#EFF6FF] hover:text-slate-800
                 `}
               >
-                <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#22C55E] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#2B5EA7] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
 
                 <span className="pl-3 shrink-0">
                   <span className="material-symbols-outlined !text-[20px]">
@@ -183,10 +183,10 @@ export default function Sidebar() {
                 className={`
                   group relative flex justify-start items-center gap-4 h-10 rounded-lg overflow-hidden
                   transition-[background-color,color] duration-150 ease-out
-                  text-slate-500 hover:bg-[#F0FDF4] hover:text-slate-800
+                  text-slate-500 hover:bg-[#EFF6FF] hover:text-slate-800
                 `}
               >
-                <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#22C55E] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#2B5EA7] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
 
                 <span className="pl-3 shrink-0">
                   <span className="text-[10px] font-bold uppercase tracking-wide">
@@ -214,9 +214,9 @@ export default function Sidebar() {
           {courses.length === 0 && (
             <Link
               href="/dashboard/courses"
-              className="group relative flex justify-start items-center gap-4 h-10 rounded-lg overflow-hidden text-slate-500 hover:bg-[#F0FDF4] hover:text-slate-800 transition-[background-color,color] duration-150 ease-out"
+              className="group relative flex justify-start items-center gap-4 h-10 rounded-lg overflow-hidden text-slate-500 hover:bg-[#EFF6FF] hover:text-slate-800 transition-[background-color,color] duration-150 ease-out"
             >
-              <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#22C55E] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+              <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#2B5EA7] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
               <span className="pl-3 shrink-0">
                 <span className="material-symbols-outlined !text-[20px] transition-transform duration-200 group-hover:rotate-90">
                   add
@@ -245,10 +245,10 @@ export default function Sidebar() {
             className={`
               group relative flex justify-start items-center gap-4 h-10 rounded-lg overflow-hidden
               transition-[background-color,color] duration-150 ease-out
-              text-slate-500 hover:bg-[#F0FDF4] hover:text-slate-800
+              text-slate-500 hover:bg-[#EFF6FF] hover:text-slate-800
             `}
           >
-            <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#22C55E] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+            <span className="absolute left-0 inset-y-0 w-[4px] rounded-r-full bg-[#2B5EA7] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
             <span className="pl-3 shrink-0">
               <span className="material-symbols-outlined !text-[20px]">
                 book_5

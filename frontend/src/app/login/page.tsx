@@ -18,6 +18,7 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,8 +40,12 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
       router.push("/dashboard");
     } catch (error: any) {
-      console.error("FastAPI Error Response:", error.response?.data);
-      setError("Login failed. Please check your credentials and try again.");
+      const detail = error.response?.data?.detail;
+      if (detail === "Incorrect email or password") {
+        setError("Incorrect email or password. Please try again.");
+      } else {
+        setError("Login failed. Please check your credentials and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,7 @@ export default function LoginPage() {
       <div className="mx-auto flex min-h-[80vh] w-full max-w-md items-center justify-center">
         <div className="w-full rounded-xl border border-[#E9ECEF] bg-white p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-[#288028] flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-[#2B5EA7] flex items-center justify-center">
               <span className="material-symbols-outlined text-white !text-[16px]">query_stats</span>
             </div>
             <span className="text-lg font-semibold">StudyLoad</span>
@@ -72,7 +77,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 required
-                className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors"
+                className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-colors"
               />
             </div>
 
@@ -80,14 +85,26 @@ export default function LoginPage() {
               <label htmlFor="password" className="mb-1 block text-sm font-medium text-[#6C757D]">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                required
-                className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 text-black outline-none focus:border-[#288028] focus:ring-2 focus:ring-[#288028]/20 transition-colors"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                  required
+                  className="w-full rounded-xl border border-[#E9ECEF] px-3 py-2 pr-10 text-black outline-none focus:border-[#2B5EA7] focus:ring-2 focus:ring-[#2B5EA7]/20 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#6C757D] hover:text-black transition-colors"
+                  tabIndex={-1}
+                >
+                  <span className="material-symbols-outlined !text-[18px]">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
