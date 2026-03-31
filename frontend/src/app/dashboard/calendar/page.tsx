@@ -264,7 +264,9 @@ export default function CalendarPage() {
         <div className="space-y-6">
           <section className="rounded-xl border border-[#E9ECEF] bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-black">{formatMonthYear(currentDate)}</h2>
+              <button type="button" onClick={() => { setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)); setViewMode("month"); }} className="text-lg font-semibold text-black hover:text-[#2B5EA7] transition-colors cursor-pointer">
+                {formatMonthYear(currentDate)}
+              </button>
               <div className="flex items-center gap-1">
                 <button type="button" onClick={goPrevMonth} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6C757D] transition-colors hover:bg-[#F8F9FA]" aria-label="Previous month">
                   <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
@@ -282,10 +284,17 @@ export default function CalendarPage() {
                 const key = toLocalDateKey(day);
                 const isToday = key === todayKey;
                 const inMonth = day.getMonth() === viewMonth && day.getFullYear() === viewYear;
+                const hasEvents = !!(assessmentMap[key]?.length || sessionMap[key]?.length);
                 return (
-                  <span key={key} className={`py-1 ${!inMonth ? "text-[#DEE2E6]" : ""} ${isToday ? "rounded-lg bg-[#2B5EA7] text-white font-bold" : ""}`}>
+                  <button
+                    type="button"
+                    key={key}
+                    onClick={() => { setCurrentDate(startOfLocalDay(day)); setViewMode("day"); }}
+                    className={`py-1 rounded-lg transition-colors cursor-pointer ${!inMonth ? "text-[#DEE2E6]" : ""} ${isToday ? "bg-[#2B5EA7] text-white font-bold" : "hover:bg-[#e8f0fa]"} ${hasEvents && !isToday ? "font-bold" : ""}`}
+                  >
                     {day.getDate()}
-                  </span>
+                    {hasEvents && <span className="block mx-auto mt-0.5 h-1 w-1 rounded-full bg-[#2B5EA7]" style={isToday ? { backgroundColor: "white" } : {}} />}
+                  </button>
                 );
               })}
             </div>
@@ -337,7 +346,11 @@ export default function CalendarPage() {
                   const cellBorderRight = day.getDay() !== 6 ? "border-r border-[#E9ECEF]" : "";
 
                   return (
-                    <div key={dayKey} className={`calendar-grid-cell border-b border-[#E9ECEF] p-3 ${cellBorderRight} ${isCurrentMonth ? "bg-white" : "bg-[#F8F9FA]"}`}>
+                    <div
+                      key={dayKey}
+                      onClick={() => { setCurrentDate(startOfLocalDay(day)); setViewMode("day"); }}
+                      className={`calendar-grid-cell border-b border-[#E9ECEF] p-3 cursor-pointer transition-colors ${cellBorderRight} ${isCurrentMonth ? "bg-white hover:bg-[#e8f0fa]" : "bg-[#F8F9FA] hover:bg-[#E9ECEF]"}`}
+                    >
                       <div className="flex items-start justify-between">
                         {isToday ? (
                           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2B5EA7] text-[11px] font-bold text-white">{day.getDate()}</span>
