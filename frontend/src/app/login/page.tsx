@@ -43,8 +43,10 @@ export default function LoginPage() {
       const detail = error.response?.data?.detail;
       if (detail === "Incorrect email or password") {
         setError("Incorrect email or password. Please try again.");
+      } else if (error.code === "ERR_NETWORK" || !error.response) {
+        setError("Unable to reach the server. Please check your connection or try again later.");
       } else {
-        setError("Login failed. Please check your credentials and try again.");
+        setError(`Login failed (${error.response?.status ?? "unknown"}). Please try again.`);
       }
     } finally {
       setLoading(false);

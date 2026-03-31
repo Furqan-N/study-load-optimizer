@@ -182,6 +182,9 @@ export default function DashboardPage() {
   const [dragTermId, setDragTermId] = useState<string | null>(null);
   const [dragOverTermId, setDragOverTermId] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [calendarViewMode, setCalendarViewMode] = useState<"week" | "month">("week");
+  const [monthOffset, setMonthOffset] = useState(0);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
   const [questText, setQuestText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -394,6 +397,38 @@ export default function DashboardPage() {
   }, [filteredStudySessions]);
 
   const calendarDays = useMemo(() => getCurrentWeekDates(weekOffset), [weekOffset]);
+
+  const monthCalendarDays = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + monthOffset;
+    const firstOfMonth = new Date(year, month, 1);
+    const lastOfMonth = new Date(year, month + 1, 0);
+    const leadingPadding = (firstOfMonth.getDay() + 6) % 7; // Monday start
+    const totalDaysInMonth = lastOfMonth.getDate();
+    const days: Date[] = [];
+    for (let i = leadingPadding; i > 0; i -= 1) days.push(new Date(year, month, 1 - i));
+    for (let day = 1; day <= totalDaysInMonth; day += 1) days.push(new Date(year, month, day));
+    const trailingPadding = (7 - (days.length % 7)) % 7;
+    for (let i = 1; i <= trailingPadding; i += 1) days.push(new Date(year, month + 1, i));
+    return days;
+  }, [monthOffset]);
+
+  const calendarHeading = useMemo(() => {
+    if (calendarViewMode === "month") {
+      const today = new Date();
+      const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+      return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    }
+    const days = getCurrentWeekDates(weekOffset);
+    const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+    return `${fmt.format(days[0])} – ${fmt.format(days[6])}, ${days[6].getFullYear()}`;
+  }, [calendarViewMode, weekOffset, monthOffset]);
+
+  const displayedDays = calendarViewMode === "week" ? calendarDays : monthCalendarDays;
+  const displayedMonth = calendarViewMode === "month"
+    ? new Date(new Date().getFullYear(), new Date().getMonth() + monthOffset, 1).getMonth()
+    : null;
   const HOURS_PER_CREDIT_MULTIPLIER = 24 / 18;
   const totalCredits = filteredCourses.reduce((sum, course) => sum + course.credits, 0);
   const expectedWeeklyMinutes = totalCredits > 0 ? totalCredits * HOURS_PER_CREDIT_MULTIPLIER * 60 : 1;
@@ -1117,39 +1152,41 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-[#2B5EA7]">calendar_month</span>
             <h3 className="text-lg font-semibold text-black">
-              {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              {calendarHeading}
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <div className="inline-flex items-center rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] p-0.5">
-              <button type="button" className="h-8 rounded-lg px-3 text-xs font-semibold bg-white text-black shadow-sm border border-[#E9ECEF]">Week</button>
-              <button type="button" className="h-8 rounded-lg px-3 text-xs font-semibold text-[#6C757D] hover:text-black transition-colors">Month</button>
+              <button type="button" onClick={() => setCalendarViewMode("week")} className={`h-8 rounded-lg px-3 text-xs font-semibold transition-colors ${calendarViewMode === "week" ? "bg-white text-black shadow-sm border border-[#E9ECEF]" : "text-[#6C757D] hover:text-black"}`}>Week</button>
+              <button type="button" onClick={() => setCalendarViewMode("month")} className={`h-8 rounded-lg px-3 text-xs font-semibold transition-colors ${calendarViewMode === "month" ? "bg-white text-black shadow-sm border border-[#E9ECEF]" : "text-[#6C757D] hover:text-black"}`}>Month</button>
             </div>
             <div className="flex items-center gap-1 ml-2">
-              <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#F8F9FA] transition-colors">
+              <button type="button" onClick={() => calendarViewMode === "week" ? setWeekOffset((prev) => prev - 1) : setMonthOffset((prev) => prev - 1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#F8F9FA] transition-colors">
                 <span className="material-symbols-outlined !text-[18px]">chevron_left</span>
               </button>
-              <Link href="/dashboard/schedule" className="h-8 rounded-lg px-3 text-xs font-semibold text-[#6C757D] hover:bg-[#F8F9FA] transition-colors flex items-center">
+              <button type="button" onClick={() => { setWeekOffset(0); setMonthOffset(0); }} className="h-8 rounded-lg px-3 text-xs font-semibold text-[#6C757D] hover:bg-[#F8F9FA] transition-colors flex items-center">
                 Today
-              </Link>
-              <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#F8F9FA] transition-colors">
+              </button>
+              <button type="button" onClick={() => calendarViewMode === "week" ? setWeekOffset((prev) => prev + 1) : setMonthOffset((prev) => prev + 1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#F8F9FA] transition-colors">
                 <span className="material-symbols-outlined !text-[18px]">chevron_right</span>
               </button>
             </div>
           </div>
         </div>
-        {/* Week Day Headers */}
+        {/* Day Headers */}
         <div className="grid grid-cols-7 mb-2">
           {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
             <div key={day} className="text-center text-[10px] font-semibold uppercase tracking-widest text-[#ADB5BD] py-2">{day}</div>
           ))}
         </div>
-        {/* Calendar Week View — current week */}
-        <div className="grid grid-cols-7 gap-0">
-          {calendarDays.map((day) => {
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {displayedDays.map((day) => {
             const dayKey = toLocalDateKey(day);
             const todayKey = toLocalDateKey(new Date());
             const isToday = dayKey === todayKey;
+            const isSelected = selectedCalendarDate === dayKey;
+            const inMonth = displayedMonth === null || day.getMonth() === displayedMonth;
             const hasDeliverable = filteredAssessments.some((a) => {
               if (a.is_completed) return false;
               const dueKey = a.due_date.split("T")[0];
@@ -1163,23 +1200,99 @@ export default function DashboardPage() {
             return (
               <div
                 key={dayKey}
-                className={`flex flex-col items-center justify-center py-3 rounded-xl transition-colors ${
-                  isToday ? "bg-[#2B5EA7] text-white" : isPast ? "text-[#CED4DA]" : "text-black"
+                onClick={() => inMonth ? setSelectedCalendarDate(isSelected ? null : dayKey) : undefined}
+                className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all duration-200 ${
+                  inMonth ? "cursor-pointer" : ""
+                } ${
+                  !inMonth ? "text-[#DEE2E6]"
+                  : isSelected ? "bg-[#e8f0fa] ring-2 ring-[#2B5EA7] text-[#2B5EA7]"
+                  : isToday ? "bg-[#2B5EA7] text-white"
+                  : isPast ? "text-[#CED4DA] hover:bg-[#F8F9FA]"
+                  : "text-black hover:bg-[#F8F9FA]"
                 }`}
               >
-                <span className={`text-lg font-semibold ${isToday ? "text-white" : ""}`}>{day.getDate()}</span>
+                <span className={`${calendarViewMode === "week" ? "text-lg" : "text-sm"} font-semibold ${isToday && !isSelected ? "text-white" : ""}`}>{day.getDate()}</span>
                 <div className="flex items-center gap-1 mt-1 h-2">
-                  {hasDeliverable ? (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-white" : "bg-[#2B5EA7]"}`}></span>
+                  {hasDeliverable && inMonth ? (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isToday && !isSelected ? "bg-white" : "bg-[#2B5EA7]"}`}></span>
                   ) : null}
-                  {hasSession ? (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-white/60" : "bg-[#ADB5BD]"}`}></span>
+                  {hasSession && inMonth ? (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isToday && !isSelected ? "bg-white/60" : "bg-[#ADB5BD]"}`}></span>
                   ) : null}
                 </div>
               </div>
             );
           })}
         </div>
+
+        {/* Selected Day Detail Panel */}
+        {selectedCalendarDate && (() => {
+          const dayAssessments = filteredAssessments.filter((a) => {
+            const dueKey = a.due_date.split("T")[0];
+            return dueKey === selectedCalendarDate;
+          });
+          const daySessions = filteredStudySessions.filter(
+            (s) => toLocalDateKey(new Date(s.start_time)) === selectedCalendarDate,
+          );
+          const selectedDateObj = parseLocalDate(selectedCalendarDate);
+          const hasItems = dayAssessments.length > 0 || daySessions.length > 0;
+
+          return (
+            <div className="mt-4 rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold text-black">
+                  {selectedDateObj.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+                </h4>
+                <button type="button" onClick={() => setSelectedCalendarDate(null)} className="text-[#6C757D] hover:text-black transition-colors">
+                  <span className="material-symbols-outlined !text-[18px]">close</span>
+                </button>
+              </div>
+              {!hasItems ? (
+                <p className="text-xs text-[#ADB5BD]">Nothing scheduled for this day.</p>
+              ) : (
+                <div className="space-y-2">
+                  {dayAssessments.map((a) => {
+                    const course = courseMap[a.course_id];
+                    const typeLower = String(a.assessment_type || "").trim().toLowerCase();
+                    const titleLower = String(a.title || "").trim().toLowerCase();
+                    const pillClass =
+                      titleLower.includes("final") || typeLower === "exam"
+                        ? "bg-rose-50 text-rose-700 border-rose-400"
+                        : titleLower.includes("midterm") || typeLower.includes("midterm")
+                          ? "bg-amber-50 text-amber-700 border-amber-400"
+                          : "bg-[#e8f0fa] text-[#2B5EA7] border-[#2B5EA7]";
+                    return (
+                      <div key={a.id} className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-xs font-semibold ${pillClass}`}>
+                        <span className="material-symbols-outlined !text-[16px]">assignment</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold">{course ? `${course.course_code} — ` : ""}{a.title}</p>
+                          <p className="text-[10px] opacity-75">{a.assessment_type}{a.weight_percentage ? ` · ${a.weight_percentage}%` : ""}{a.is_completed ? " · Completed" : ""}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {daySessions.map((s) => {
+                    const course = courseMap[s.course_id];
+                    const start = new Date(s.start_time);
+                    const timeLabel = !Number.isNaN(start.getTime())
+                      ? start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })
+                      : "";
+                    return (
+                      <div key={s.id} className="flex items-center gap-3 rounded-lg border-l-4 border-[#ADB5BD] bg-gray-50 px-3 py-2 text-xs font-semibold text-[#6C757D]">
+                        <span className="material-symbols-outlined !text-[16px]">menu_book</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold">{course ? `${course.course_code} — ` : ""}{s.title}</p>
+                          <p className="text-[10px] opacity-75">{timeLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}{s.is_completed ? " · Completed" : ""}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         <div className="mt-4 flex items-center gap-6 text-xs text-[#6C757D]">
           <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#2B5EA7]"></span> Deliverable due</div>
           <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#ADB5BD]"></span> Study session</div>

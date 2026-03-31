@@ -11,7 +11,13 @@
       "Bash(python -m alembic upgrade head)",
       "Bash(python -c \"from app.api.routes.terms import router; print\\(''Route module OK''\\); from app.models.term import Term; print\\(''Model OK''\\); from app.schemas.term import TermCreate, TermResponse; print\\(''Schema OK''\\)\")",
       "Bash(cd /c/Users/\"Chess Master\"/study-load-optimizer/frontend/src)",
-      "Bash(sed -i 's/text-green-600/text-blue-600/g' app/dashboard/page.tsx)"
+      "Bash(sed -i 's/text-green-600/text-blue-600/g' app/dashboard/page.tsx)",
+      "Bash(find /c/Users/Chess Master/study-load-optimizer/frontend/app -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(grep -r \"month.*week.*day\\\\|month\\\\|week\\\\|day\" /c/Users/Chess Master/study-load-optimizer/frontend/src/app/dashboard --include=*.tsx)",
+      "Bash(find /c/Users/Chess Master/study-load-optimizer -name *calendar* -type f)",
+      "Bash(npx tsc:*)",
+      "Bash(find 'C:\\\\Users\\\\Chess Master\\\\study-load-optimizer/backend' -type f \\\\\\(-name *auth* -o -name *token* \\\\\\))",
+      "Bash(find 'C:\\\\Users\\\\Chess Master\\\\study-load-optimizer' -maxdepth 2 -name .env* -o -name *.env*)"
     ]
   }
 }
