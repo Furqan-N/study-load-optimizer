@@ -331,7 +331,7 @@ export function HeroSection() {
                 </section>
 
                 {/* How it works */}
-                <section id="how-it-works" className="bg-background pb-16 md:pb-32 scroll-mt-20">
+                <section id="how-it-works" className="bg-background pb-16 md:pb-32 scroll-mt-32">
                     <div className="mx-auto max-w-5xl px-6">
                         <h2 className="text-center text-3xl font-bold mb-12">How it works</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -434,6 +434,14 @@ const HeroHeader = () => {
                                         <li key={item.name}>
                                             <a
                                                 href={item.href}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    const target = document.querySelector(item.href)
+                                                    if (target) {
+                                                        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                                    }
+                                                    setMenuState(false)
+                                                }}
                                                 className="text-muted-foreground hover:text-accent-foreground block duration-150">
                                                 <span>{item.name}</span>
                                             </a>
