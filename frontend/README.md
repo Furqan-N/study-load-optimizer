@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Study Load Optimizer — Frontend
 
-## Getting Started
+Next.js frontend for the Study Load Optimizer application.
 
-First, run the development server:
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- shadcn/ui
+- Framer Motion
+- Recharts (analytics charts)
+- Axios (API client)
+- Lucide React (icons)
+
+## Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at `http://localhost:3000`. The backend API should be running at `http://localhost:8000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route                         | Description                    |
+| ----------------------------- | ------------------------------ |
+| `/`                           | Landing page (hero section)    |
+| `/login`                      | User login                     |
+| `/register`                   | User registration              |
+| `/dashboard`                  | Dashboard home                 |
+| `/dashboard/courses`          | Course list and management     |
+| `/dashboard/courses/[id]`     | Individual course detail       |
+| `/dashboard/assessments`      | Assessment tracker             |
+| `/dashboard/calendar`         | Calendar view                  |
+| `/dashboard/schedule`         | Study schedule                 |
+| `/dashboard/insights`         | Analytics and study breakdowns |
+| `/dashboard/settings`         | User settings                  |
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+frontend/
+├── src/
+│   ├── app/                     # Next.js App Router
+│   │   ├── page.tsx             # Landing page
+│   │   ├── layout.tsx           # Root layout
+│   │   ├── globals.css          # Global styles
+│   │   ├── login/               # Login page
+│   │   ├── register/            # Registration page
+│   │   ├── dashboard/           # Dashboard pages
+│   │   │   ├── page.tsx         # Dashboard home
+│   │   │   ├── layout.tsx       # Dashboard layout (sidebar + header)
+│   │   │   ├── courses/         # Course management
+│   │   │   ├── assessments/     # Assessment tracking
+│   │   │   ├── calendar/        # Calendar view
+│   │   │   ├── schedule/        # Study schedule
+│   │   │   ├── insights/        # Analytics
+│   │   │   └── settings/        # User settings
+│   │   └── utils/
+│   │       └── dateHelpers.ts   # Date utilities
+│   ├── components/
+│   │   ├── auth/
+│   │   │   └── ProtectedRoute.tsx
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   └── Sidebar.tsx
+│   │   └── ui/                  # shadcn/ui + custom components
+│   └── lib/
+│       ├── api.ts               # Axios API client
+│       ├── utils.ts             # Utility functions (cn, etc.)
+│       └── selectedTermStorage.ts # Term selection persistence
+├── public/                      # Static assets (logos, icons)
+├── package.json
+├── tsconfig.json
+├── next.config.ts
+├── components.json              # shadcn/ui config
+├── postcss.config.mjs
+└── eslint.config.mjs
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # Start dev server
+npm run build    # Production build
+npm run start    # Start production server
+npm run lint     # Run ESLint
+```

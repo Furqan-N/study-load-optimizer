@@ -17,7 +17,9 @@
       "Bash(find /c/Users/Chess Master/study-load-optimizer -name *calendar* -type f)",
       "Bash(npx tsc:*)",
       "Bash(find 'C:\\\\Users\\\\Chess Master\\\\study-load-optimizer/backend' -type f \\\\\\(-name *auth* -o -name *token* \\\\\\))",
-      "Bash(find 'C:\\\\Users\\\\Chess Master\\\\study-load-optimizer' -maxdepth 2 -name .env* -o -name *.env*)"
+      "Bash(find 'C:\\\\Users\\\\Chess Master\\\\study-load-optimizer' -maxdepth 2 -name .env* -o -name *.env*)",
+      "Bash(python -m pytest tests/test_planner.py -v)",
+      "Bash(python -m pytest -v)"
     ]
   }
 }

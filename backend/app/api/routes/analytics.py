@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
 from app.db.session import get_db
+from app.models.assessment import Assessment
+from app.models.course import Course
 from app.models.study_session import StudySession
 from app.models.user import User
 
@@ -65,6 +67,75 @@ async def get_study_time_by_course(
             {
                 "course_id": str(course_id),
                 "hours": round(minutes / 60.0, 1),
+            }
+        )
+
+    return results
+
+
+@router.get("/grade-forecast")
+async def get_grade_forecast(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    term_id: str | None = Query(default=None, description="Filter by term UUID."),
+):
+    """
+    Per-course grade forecast.
+
+    For each course returns:
+      - earned:   weighted score from completed & graded assessments.
+      - completed_weight: total weight% of assessments that are completed.
+      - remaining_weight: total weight% still outstanding.
+      - projected: estimated final grade assuming the student earns the same
+        average rate on remaining work (returns null when nothing is graded).
+
+    Response shape:
+      [{ "course_id", "course_code", "course_name",
+         "earned", "completed_weight", "remaining_weight", "projected" }, ...]
+    """
+
+    course_q = db.query(Course).filter(Course.user_id == current_user.id)
+    if term_id:
+        course_q = course_q.filter(Course.term_id == term_id)
+    courses = course_q.all()
+
+    results: list[dict] = []
+    for course in courses:
+        assessments = (
+            db.query(Assessment)
+            .filter(
+                Assessment.user_id == current_user.id,
+                Assessment.course_id == course.id,
+            )
+            .all()
+        )
+
+        earned = 0.0
+        completed_weight = 0.0
+        remaining_weight = 0.0
+
+        for a in assessments:
+            if a.is_completed and a.earned_score is not None:
+                earned += a.earned_score * (a.weight_percentage / 100.0)
+                completed_weight += a.weight_percentage
+            else:
+                remaining_weight += a.weight_percentage
+
+        # Project final grade: assume same rate on remaining work.
+        projected = None
+        if completed_weight > 0:
+            rate = earned / (completed_weight / 100.0)  # score per 100% weight
+            projected = round(earned + rate * (remaining_weight / 100.0), 2)
+
+        results.append(
+            {
+                "course_id": str(course.id),
+                "course_code": course.course_code,
+                "course_name": course.course_name,
+                "earned": round(earned, 2),
+                "completed_weight": round(completed_weight, 2),
+                "remaining_weight": round(remaining_weight, 2),
+                "projected": projected,
             }
         )
 
