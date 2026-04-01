@@ -1,6 +1,9 @@
 # Claude Code
 .claude/
 
+# Project context (dev aid, not needed in repo)
+project_context.md
+
 # Python
 __pycache__/
 *.pyc
